@@ -39,7 +39,7 @@ public class MonitorController {
      */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> stream() {
-        log.info("监控客户端连接");
+        log.info("监控客户端连接。。。");
 
         return eventService.getEventStream()
                 .map(this::toServerSentEvent)
