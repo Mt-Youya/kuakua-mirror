@@ -1,0 +1,91 @@
+package com.kuakua.mirror.shared.interceptor;
+
+import com.kuakua.mirror.service.JwtService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.server.HandshakeInterceptor;
+
+import java.util.Map;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class WebSocketHandshakeInterceptor implements HandshakeInterceptor {
+
+    private final JwtService jwtService;
+
+    @Override
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
+                                   WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+
+        String query = request.getURI().getQuery();
+        log.info("WebSocket 握手请求: uri={}, query={}", request.getURI(), query);
+
+        // 从查询参数中提取 token
+        String token = extractToken(query);
+
+        if (token == null || token.isEmpty()) {
+            log.warn("WebSocket 握手失败: 缺少 token");
+            return false;
+        }
+
+        // 验证 token
+        if (!jwtService.validateToken(token)) {
+            log.warn("WebSocket 握手失败: token 无效");
+            return false;
+        }
+
+        // 提取用户信息并存储到 session attributes
+        try {
+            Long userId = jwtService.extractUserId(token);
+            String username = jwtService.extractUsername(token);
+
+            attributes.put("userId", userId);
+            attributes.put("username", username);
+            attributes.put("token", token);
+
+            log.info("WebSocket 握手成功: userId={}, username={}", userId, username);
+            return true;
+        } catch (Exception e) {
+            log.error("WebSocket 握手失败: 提取用户信息错误", e);
+            return false;
+        }
+    }
+
+    @Override
+    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
+                              WebSocketHandler wsHandler, Exception exception) {
+        if (exception != null) {
+            log.error("WebSocket 握手后处理错误", exception);
+        }
+    }
+
+    /**
+     * 从查询字符串中提取 token
+     * 支持格式: ?token=xxx 或 ?access_token=xxx
+     */
+    private String extractToken(String query) {
+        if (query == null || query.isEmpty()) {
+            return null;
+        }
+
+        String[] params = query.split("&");
+        for (String param : params) {
+            String[] keyValue = param.split("=");
+            if (keyValue.length == 2) {
+                String key = keyValue[0];
+                String value = keyValue[1];
+
+                if ("token".equals(key) || "access_token".equals(key)) {
+                    return value;
+                }
+            }
+        }
+
+        return null;
+    }
+}

@@ -1,0 +1,138 @@
+package com.kuakua.mirror.audio.infra;
+
+import com.kuakua.mirror.ai.infra.OpenAIService;
+import com.kuakua.mirror.conversation.infra.SessionManager;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+/**
+ * 语音识别服务
+ * 封装 ASR（Automatic Speech Recognition）业务逻辑
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ASRService {
+
+    private final OpenAIService openAIService;
+    private final SessionManager sessionManager;
+
+    private static final int MIN_AUDIO_LENGTH = 1024; // 最小音频长度（字节）
+    private static final int MAX_AUDIO_LENGTH = 25 * 1024 * 1024; // 最大25MB
+
+    /**
+     * 处理音频帧
+     * 将音频帧添加到会话缓冲区
+     */
+    public void processAudioFrame(String sessionId, byte[] audioFrame) {
+        SessionManager.SessionContext context = sessionManager.getSession(sessionId);
+        if (context == null) {
+            log.warn("会话不存在，无法处理音频帧: sessionId={}", sessionId);
+            return;
+        }
+
+        // 初始化音频缓冲区
+        if (context.getAudioBuffer() == null) {
+            context.setAudioBuffer(new byte[0]);
+        }
+
+        // 追加音频帧到缓冲区
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        try {
+            buffer.write(context.getAudioBuffer());
+            buffer.write(audioFrame);
+            context.setAudioBuffer(buffer.toByteArray());
+
+            log.debug("音频帧已缓冲: sessionId={}, 当前缓冲区大小={}字节",
+                    sessionId, context.getAudioBuffer().length);
+        } catch (IOException e) {
+            log.error("音频帧缓冲失败: sessionId={}", sessionId, e);
+        }
+
+        sessionManager.updateActivity(sessionId);
+    }
+
+    /**
+     * 完成语音识别
+     * 将缓冲区的音频发送到 OpenAI Whisper API
+     */
+    public Mono<String> finalizeTranscription(String sessionId) {
+        SessionManager.SessionContext context = sessionManager.getSession(sessionId);
+        if (context == null) {
+            log.warn("会话不存在，无法完成识别: sessionId={}", sessionId);
+            return Mono.error(new IllegalStateException("Session not found: " + sessionId));
+        }
+
+        byte[] audioData = context.getAudioBuffer();
+        if (audioData == null || audioData.length < MIN_AUDIO_LENGTH) {
+            log.warn("音频数据太短，无法识别: sessionId={}, 长度={}字节",
+                    sessionId, audioData == null ? 0 : audioData.length);
+            clearAudioBuffer(sessionId);
+            return Mono.just("");
+        }
+
+        if (audioData.length > MAX_AUDIO_LENGTH) {
+            log.error("音频数据超过限制: sessionId={}, 长度={}字节",
+                    sessionId, audioData.length);
+            clearAudioBuffer(sessionId);
+            return Mono.error(new IllegalStateException("Audio data too large"));
+        }
+
+        log.info("开始语音识别: sessionId={}, 音频长度={}字节", sessionId, audioData.length);
+
+        return openAIService.transcribeAudio(audioData)
+                .doOnSuccess(text -> {
+                    log.info("语音识别完成: sessionId={}, 文本长度={}字符",
+                            sessionId, text.length());
+
+                    // 清空音频缓冲区
+                    clearAudioBuffer(sessionId);
+
+                    // 添加到对话历史
+                    if (!text.isEmpty()) {
+                        sessionManager.addMessage(sessionId, "user", text);
+                    }
+                })
+                .doOnError(error -> {
+                    log.error("语音识别失败: sessionId={}", sessionId, error);
+                    clearAudioBuffer(sessionId);
+                });
+    }
+
+    /**
+     * 清空音频缓冲区
+     */
+    public void clearAudioBuffer(String sessionId) {
+        SessionManager.SessionContext context = sessionManager.getSession(sessionId);
+        if (context != null) {
+            context.setAudioBuffer(null);
+            log.debug("已清空音频缓冲区: sessionId={}", sessionId);
+        }
+    }
+
+    /**
+     * 取消当前识别
+     * 清空缓冲区并重置状态
+     */
+    public void abortTranscription(String sessionId) {
+        log.info("取消语音识别: sessionId={}", sessionId);
+        clearAudioBuffer(sessionId);
+        sessionManager.setSessionState(sessionId, SessionManager.SessionState.IDLE);
+    }
+
+    /**
+     * 获取缓冲区大小
+     */
+    public int getBufferSize(String sessionId) {
+        SessionManager.SessionContext context = sessionManager.getSession(sessionId);
+        if (context == null || context.getAudioBuffer() == null) {
+            return 0;
+        }
+        return context.getAudioBuffer().length;
+    }
+}

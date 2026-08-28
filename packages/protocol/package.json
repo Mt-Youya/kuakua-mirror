@@ -1,0 +1,32 @@
+{
+  "name": "@kuakua/protocol",
+  "version": "0.0.1",
+  "description": "KuaKua Mirror Device Protocol - 设备通信协议的唯一事实来源",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "kuakua",
+    "device",
+    "protocol",
+    "websocket"
+  ],
+  "author": "KuaKua Team",
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^26.3.0",
+    "jest": "^30.4.2",
+    "typescript": "^6.0.3"
+  }
+}

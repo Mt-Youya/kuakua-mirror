@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+  - "tools/*"
+allowBuilds:
+  sqlite3: true
+  unrs-resolver: true

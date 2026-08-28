@@ -1,0 +1,135 @@
+package com.kuakua.mirror.audio.infra;
+
+import com.kuakua.mirror.ai.infra.OpenAIService;
+import com.kuakua.mirror.conversation.infra.SessionManager;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+
+/**
+ * 文本转语音服务
+ * 封装 TTS（Text-to-Speech）业务逻辑
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TTSService {
+
+    private final OpenAIService openAIService;
+    private final SessionManager sessionManager;
+
+    private static final String DEFAULT_VOICE = "alloy";
+    private static final String DEFAULT_MODEL = "tts-1";
+    private static final int MAX_TEXT_LENGTH = 4096; // OpenAI TTS 限制
+
+    /**
+     * 将文本转换为语音流
+     *
+     * @param sessionId 会话ID
+     * @param text 要转换的文本
+     * @return PCM16 音频数据流
+     */
+    public Flux<byte[]> synthesizeSpeech(String sessionId, String text) {
+        SessionManager.SessionContext context = sessionManager.getSession(sessionId);
+        if (context == null) {
+            log.warn("会话不存在，无法合成语音: sessionId={}", sessionId);
+            return Flux.error(new IllegalStateException("Session not found: " + sessionId));
+        }
+
+        if (text == null || text.isEmpty()) {
+            log.warn("文本为空，无法合成语音: sessionId={}", sessionId);
+            return Flux.empty();
+        }
+
+        // 检查文本长度
+        if (text.length() > MAX_TEXT_LENGTH) {
+            log.warn("文本过长，截断处理: sessionId={}, 原长度={}, 截断至={}",
+                    sessionId, text.length(), MAX_TEXT_LENGTH);
+            text = text.substring(0, MAX_TEXT_LENGTH);
+        }
+
+        // 获取语音配置
+        String voice = context.getVoice() != null ? context.getVoice() : DEFAULT_VOICE;
+        String model = context.getTtsModel() != null ? context.getTtsModel() : DEFAULT_MODEL;
+
+        log.info("开始语音合成: sessionId={}, 文本长度={}, voice={}, model={}",
+                sessionId, text.length(), voice, model);
+
+        return openAIService.textToSpeechStream(text, voice, model)
+                .doOnNext(chunk -> {
+                    log.debug("TTS音频块: sessionId={}, 大小={}字节", sessionId, chunk.length);
+                })
+                .doOnComplete(() -> {
+                    log.info("语音合成完成: sessionId={}", sessionId);
+                    sessionManager.updateActivity(sessionId);
+                })
+                .doOnError(error -> {
+                    log.error("语音合成失败: sessionId={}", sessionId, error);
+                });
+    }
+
+    /**
+     * 流式合成（逐句合成）
+     * 将长文本分段，逐句合成并返回
+     *
+     * @param sessionId 会话ID
+     * @param textStream 文本流
+     * @return PCM16 音频数据流
+     */
+    public Flux<byte[]> synthesizeSpeechStream(String sessionId, Flux<String> textStream) {
+        SessionManager.SessionContext context = sessionManager.getSession(sessionId);
+        if (context == null) {
+            log.warn("会话不存在，无法合成语音流: sessionId={}", sessionId);
+            return Flux.error(new IllegalStateException("Session not found: " + sessionId));
+        }
+
+        // 缓冲文本块，按句子边界切分
+        return textStream
+                .bufferUntil(this::isSentenceEnd)
+                .concatMap(chunks -> {
+                    String sentence = String.join("", chunks).trim();
+                    if (sentence.isEmpty()) {
+                        return Flux.empty();
+                    }
+                    return synthesizeSpeech(sessionId, sentence);
+                });
+    }
+
+    /**
+     * 判断是否为句子结束
+     */
+    private boolean isSentenceEnd(String chunk) {
+        return chunk.matches(".*[。！？.!?]\\s*$");
+    }
+
+    /**
+     * 设置语音
+     */
+    public void setVoice(String sessionId, String voice) {
+        SessionManager.SessionContext context = sessionManager.getSession(sessionId);
+        if (context != null) {
+            context.setVoice(voice);
+            log.info("语音已更新: sessionId={}, voice={}", sessionId, voice);
+        }
+    }
+
+    /**
+     * 设置 TTS 模型
+     */
+    public void setTtsModel(String sessionId, String model) {
+        SessionManager.SessionContext context = sessionManager.getSession(sessionId);
+        if (context != null) {
+            context.setTtsModel(model);
+            log.info("TTS模型已更新: sessionId={}, model={}", sessionId, model);
+        }
+    }
+
+    /**
+     * 取消当前合成
+     */
+    public void abortSynthesis(String sessionId) {
+        log.info("取消语音合成: sessionId={}", sessionId);
+        sessionManager.setSessionState(sessionId, SessionManager.SessionState.IDLE);
+    }
+}

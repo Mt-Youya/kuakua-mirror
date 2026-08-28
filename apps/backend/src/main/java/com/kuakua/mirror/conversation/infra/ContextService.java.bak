@@ -1,0 +1,300 @@
+package com.kuakua.mirror.conversation.infra;
+
+import com.kuakua.mirror.model.Moment;
+import com.kuakua.mirror.repository.MomentRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 上下文管理服务
+ * 负责 Moment 结束时的上下文压缩和新 Moment 开始时的历史上下文加载
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ContextService {
+
+    private final MomentRepository momentRepository;
+    private final WebClient.Builder webClientBuilder;
+
+    @Value("${openai.api.key}")
+    private String openaiApiKey;
+
+    @Value("${openai.api.url:https://api.openai.com/v1}")
+    private String openaiApiUrl;
+
+    @Value("${openai.model:gpt-4}")
+    private String model;
+
+    /**
+     * 压缩 Moment 的对话上下文
+     * 在 Moment 结束时调用，将完整对话历史压缩为简洁摘要
+     */
+    @Transactional
+    public Mono<String> compressMomentContext(Long momentId, String fullConversation) {
+        log.info("开始压缩 Moment 上下文: momentId={}", momentId);
+
+        return Mono.fromCallable(() -> momentRepository.findById(momentId)
+                .orElseThrow(() -> new RuntimeException("Moment 不存在: " + momentId)))
+            .flatMap(moment -> {
+                // 构建压缩提示词
+                String compressionPrompt = buildCompressionPrompt(fullConversation);
+
+                // 调用 OpenAI API 进行压缩
+                return callOpenAI(compressionPrompt)
+                    .doOnSuccess(compressedContext -> {
+                        // 保存压缩后的上下文
+                        moment.setCompressedContext(compressedContext);
+                        moment.setUpdatedAt(LocalDateTime.now());
+                        momentRepository.save(moment);
+                        log.info("Moment 上下文压缩完成: momentId={}, 压缩后长度={}",
+                            momentId, compressedContext.length());
+                    })
+                    .doOnError(error ->
+                        log.error("Moment 上下文压缩失败: momentId={}", momentId, error));
+            });
+    }
+
+    /**
+     * 加载所有历史 Moment 的压缩上下文
+     * 关键：加载用户的所有历史 Moment，不是最近 5-10 条
+     */
+    public String loadAllHistoricalContext(Long userId, Long currentMomentId) {
+        log.info("加载所有历史上下文: userId={}, currentMomentId={}", userId, currentMomentId);
+
+        // 查询用户所有已完成的 Moment（排除当前 Moment）
+        List<Moment> historicalMoments = momentRepository
+            .findByUserIdOrderByStartTimeDesc(userId);
+
+        // 过滤：只要已完成的，排除当前 Moment
+        historicalMoments.removeIf(m ->
+            m.getStatus() != Moment.MomentStatus.COMPLETED ||
+            (currentMomentId != null && m.getId().equals(currentMomentId))
+        );
+
+        if (historicalMoments.isEmpty()) {
+            log.info("用户暂无历史上下文: userId={}", userId);
+            return "";
+        }
+
+        log.info("找到 {} 条历史 Moment", historicalMoments.size());
+
+        // 构建历史上下文字符串（按时间正序排列）
+        historicalMoments.sort((m1, m2) -> m1.getStartTime().compareTo(m2.getStartTime()));
+
+        StringBuilder contextBuilder = new StringBuilder();
+        contextBuilder.append("=== 用户历史对话上下文 ===\n\n");
+
+        for (Moment moment : historicalMoments) {
+            contextBuilder.append(String.format("【Moment #%d - %s】\n",
+                moment.getId(), moment.getStartTime()));
+
+            if (moment.getCompressedContext() != null && !moment.getCompressedContext().isEmpty()) {
+                contextBuilder.append(moment.getCompressedContext());
+            } else {
+                contextBuilder.append("（未压缩或无上下文）");
+            }
+
+            contextBuilder.append("\n\n");
+        }
+
+        contextBuilder.append("=== 历史上下文结束 ===\n");
+
+        String fullContext = contextBuilder.toString();
+        log.info("历史上下文加载完成: 总字符数={}", fullContext.length());
+
+        return fullContext;
+    }
+
+    /**
+     * 构建压缩提示词
+     */
+    private String buildCompressionPrompt(String fullConversation) {
+        return String.format("""
+            你是一个专业的对话摘要助手。请将以下完整对话压缩为简洁的摘要，保留关键信息：
+
+            1. 用户的核心话题和情绪状态
+            2. 重要的事件、决定或想法
+            3. AI 的主要建议和鼓励
+            4. 需要在后续对话中记住的关键点
+
+            压缩要求：
+            - 使用第三人称描述
+            - 保持客观中性
+            - 长度控制在 200-300 字
+            - 突出重点，省略闲聊
+
+            完整对话：
+            %s
+
+            请输出压缩摘要：
+            """, fullConversation);
+    }
+
+    /**
+     * 开始新 Moment
+     * 创建新 Moment 记录，并加载所有历史上下文
+     */
+    @Transactional
+    public Mono<Moment> startNewMoment(Long userId) {
+        log.info("开始新 Moment: userId={}", userId);
+
+        return Mono.fromCallable(() -> {
+            // 创建新 Moment
+            Moment moment = new Moment();
+            moment.setUserId(userId);
+            moment.setStatus(Moment.MomentStatus.ACTIVE);
+            moment.setStartTime(LocalDateTime.now());
+            moment.setCreatedAt(LocalDateTime.now());
+            moment.setUpdatedAt(LocalDateTime.now());
+
+            Moment savedMoment = momentRepository.save(moment);
+            log.info("新 Moment 创建成功: momentId={}", savedMoment.getId());
+
+            // 加载所有历史上下文（记录日志但不返回）
+            String historicalContext = loadAllHistoricalContext(userId, savedMoment.getId());
+            log.info("历史上下文已加载: {} 条历史 Moment", countHistoricalMoments(historicalContext));
+
+            return savedMoment;
+        });
+    }
+
+    /**
+     * 结束当前 Moment
+     * 更新 Moment 状态为 completed，触发上下文压缩
+     */
+    @Transactional
+    public Mono<Moment> endCurrentMoment(Long momentId) {
+        log.info("结束 Moment: momentId={}", momentId);
+
+        return Mono.fromCallable(() -> momentRepository.findById(momentId)
+                .orElseThrow(() -> new RuntimeException("Moment 不存在: " + momentId)))
+            .flatMap(moment -> {
+                // 更新状态
+                moment.setStatus(Moment.MomentStatus.COMPLETED);
+                moment.setEndTime(LocalDateTime.now());
+                moment.setUpdatedAt(LocalDateTime.now());
+                Moment saved = momentRepository.save(moment);
+
+                // 异步压缩上下文（需要获取完整对话历史）
+                // TODO: 从 MessageRepository 获取完整对话
+                String fullConversation = ""; // 暂时为空，后续实现
+
+                compressMomentContext(momentId, fullConversation)
+                    .onErrorResume(error -> {
+                        log.error("上下文压缩失败，但 Moment 已标记为完成: momentId={}", momentId, error);
+                        return Mono.empty();
+                    })
+                    .subscribe();
+
+                return Mono.just(saved);
+            });
+    }
+
+    /**
+     * 获取当前活跃的 Moment
+     */
+    public Moment getActiveMoment(Long userId) {
+        return momentRepository.findByUserIdAndStatus(userId, Moment.MomentStatus.ACTIVE)
+            .orElse(null);
+    }
+
+    /**
+     * 统计历史上下文中的 Moment 数量
+     */
+    private int countHistoricalMoments(String historicalContext) {
+        if (historicalContext == null || historicalContext.isEmpty()) {
+            return 0;
+        }
+        // 统计 "【Moment #" 出现的次数
+        int count = 0;
+        int index = 0;
+        String pattern = "【Moment #";
+        while ((index = historicalContext.indexOf(pattern, index)) != -1) {
+            count++;
+            index += pattern.length();
+        }
+        return count;
+    }
+
+    /**
+     * 调用 OpenAI API
+     */
+    private Mono<String> callOpenAI(String prompt) {
+        WebClient webClient = webClientBuilder
+            .baseUrl(openaiApiUrl)
+            .defaultHeader("Authorization", "Bearer " + openaiApiKey)
+            .defaultHeader("Content-Type", "application/json")
+            .build();
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", model);
+        requestBody.put("messages", List.of(
+            Map.of("role", "user", "content", prompt)
+        ));
+        requestBody.put("temperature", 0.3);
+        requestBody.put("max_tokens", 500);
+
+        return webClient.post()
+            .uri("/chat/completions")
+            .bodyValue(requestBody)
+            .retrieve()
+            .bodyToMono(Map.class)
+            .map(response -> {
+                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+                Map<String, Object> firstChoice = choices.get(0);
+                Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+                return (String) message.get("content");
+            })
+            .doOnError(error -> log.error("调用 OpenAI API 失败", error));
+    }
+
+    /**
+     * 构建完整对话上下文
+     * 用于生成个性化回应，包含：用户画像 + 历史上下文 + 当前 Moment 的消息历史
+     */
+    public String buildConversationContext(Long userId, Long momentId) {
+        log.info("构建对话上下文: userId={}, momentId={}", userId, momentId);
+
+        StringBuilder contextBuilder = new StringBuilder();
+
+        // 1. 加载用户画像
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("用户不存在: " + userId));
+
+        if (user.getUserProfile() != null && !user.getUserProfile().isEmpty()) {
+            contextBuilder.append("=== 用户画像 ===\n");
+            contextBuilder.append(user.getUserProfile()).append("\n\n");
+        }
+
+        // 2. 加载历史上下文
+        String historicalContext = loadAllHistoricalContext(userId, momentId);
+        if (!historicalContext.isEmpty()) {
+            contextBuilder.append(historicalContext);
+        }
+
+        // 3. 加载当前 Moment 的消息历史
+        List<Message> currentMessages = messageRepository.findByMomentIdOrderByTimestampAsc(momentId);
+        if (!currentMessages.isEmpty()) {
+            contextBuilder.append("=== 当前对话 ===\n\n");
+            for (Message msg : currentMessages) {
+                String roleLabel = msg.getRole() == Message.MessageRole.USER ? "用户" : "助手";
+                contextBuilder.append("[").append(roleLabel).append("]: ");
+                contextBuilder.append(msg.getContent()).append("\n");
+            }
+        }
+
+        log.info("对话上下文构建完成: 长度={}", contextBuilder.length());
+        return contextBuilder.toString();
+    }
+}

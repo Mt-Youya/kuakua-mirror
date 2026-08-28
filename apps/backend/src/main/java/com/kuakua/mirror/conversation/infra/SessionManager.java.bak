@@ -1,0 +1,180 @@
+package com.kuakua.mirror.conversation.infra;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * 会话管理器
+ * 管理 WebSocket 会话状态、上下文、超时清理
+ */
+@Slf4j
+@Service
+public class SessionManager {
+
+    private static final long SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5分钟超时
+    private static final int MAX_CONTEXT_MESSAGES = 10; // 保留最近10条对话
+
+    private final Map<String, SessionContext> sessions = new ConcurrentHashMap<>();
+
+    /**
+     * 创建或获取会话
+     */
+    public SessionContext getOrCreateSession(String sessionId, String deviceId) {
+        return sessions.computeIfAbsent(sessionId, id -> {
+            log.info("创建新会话: sessionId={}, deviceId={}", id, deviceId);
+            SessionContext context = new SessionContext();
+            context.setSessionId(id);
+            context.setDeviceId(deviceId);
+            context.setCreatedAt(Instant.now());
+            context.setLastActiveAt(Instant.now());
+            return context;
+        });
+    }
+
+    /**
+     * 更新会话活跃时间
+     */
+    public void updateActivity(String sessionId) {
+        SessionContext context = sessions.get(sessionId);
+        if (context != null) {
+            context.setLastActiveAt(Instant.now());
+        }
+    }
+
+    /**
+     * 添加对话历史
+     */
+    public void addMessage(String sessionId, String role, String content) {
+        SessionContext context = sessions.get(sessionId);
+        if (context != null) {
+            context.getMessages().add(new Message(role, content, Instant.now()));
+
+            // 保留最近的消息，避免上下文过长
+            if (context.getMessages().size() > MAX_CONTEXT_MESSAGES) {
+                context.getMessages().remove(0);
+            }
+
+            updateActivity(sessionId);
+        }
+    }
+
+    /**
+     * 获取会话
+     */
+    public SessionContext getSession(String sessionId) {
+        return sessions.get(sessionId);
+    }
+
+    /**
+     * 设置会话状态
+     */
+    public void setSessionState(String sessionId, SessionState state) {
+        SessionContext context = sessions.get(sessionId);
+        if (context != null) {
+            context.setState(state);
+            updateActivity(sessionId);
+        }
+    }
+
+    /**
+     * 删除会话
+     */
+    public void removeSession(String sessionId) {
+        SessionContext removed = sessions.remove(sessionId);
+        if (removed != null) {
+            log.info("删除会话: sessionId={}, 存活时长={}秒",
+                    sessionId,
+                    (Instant.now().toEpochMilli() - removed.getCreatedAt().toEpochMilli()) / 1000);
+        }
+    }
+
+    /**
+     * 获取活跃会话数
+     */
+    public int getActiveSessionCount() {
+        return sessions.size();
+    }
+
+    /**
+     * 定时清理超时会话
+     */
+    @Scheduled(fixedRate = 60000) // 每分钟执行一次
+    public void cleanupExpiredSessions() {
+        long now = Instant.now().toEpochMilli();
+        List<String> expiredSessions = new ArrayList<>();
+
+        sessions.forEach((sessionId, context) -> {
+            long lastActiveMs = context.getLastActiveAt().toEpochMilli();
+            if (now - lastActiveMs > SESSION_TIMEOUT_MS) {
+                expiredSessions.add(sessionId);
+            }
+        });
+
+        if (!expiredSessions.isEmpty()) {
+            log.info("清理 {} 个超时会话", expiredSessions.size());
+            expiredSessions.forEach(this::removeSession);
+        }
+    }
+
+    /**
+     * 会话上下文
+     */
+    @Data
+    public static class SessionContext {
+        private String sessionId;
+        private String deviceId;
+        private String userId;
+        private SessionState state = SessionState.IDLE;
+        private Instant createdAt;
+        private Instant lastActiveAt;
+        private List<Message> messages = new ArrayList<>();
+        private byte[] audioBuffer; // 临时音频缓冲区
+        private String systemPrompt; // 系统提示词
+        private StringBuilder currentAssistantMessage; // 当前正在生成的助手消息
+        private String voice; // TTS 语音
+        private String ttsModel; // TTS 模型
+
+        /**
+         * 获取对话历史（转换为 Map 格式）
+         */
+        public List<Map<String, String>> getConversationHistory() {
+            List<Map<String, String>> history = new ArrayList<>();
+            for (Message msg : messages) {
+                history.add(Map.of(
+                    "role", msg.getRole(),
+                    "content", msg.getContent()
+                ));
+            }
+            return history;
+        }
+    }
+
+    /**
+     * 消息记录
+     */
+    @Data
+    public static class Message {
+        private final String role; // user, assistant
+        private final String content;
+        private final Instant timestamp;
+    }
+
+    /**
+     * 会话状态
+     */
+    public enum SessionState {
+        IDLE,           // 空闲
+        LISTENING,      // 正在监听
+        TRANSCRIBING,   // 正在转录
+        PROCESSING,     // 正在处理
+        RESPONDING      // 正在回复
+    }
+}

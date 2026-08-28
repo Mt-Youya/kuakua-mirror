@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: kuakua-mirror
+  profiles:
+    active: dev
+
+# 开发环境配置示例
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.kuakua.mirror: DEBUG
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  api-base: ${OPENAI_API_BASE:https://api.openai.com}
+
+# 生产环境配置示例
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: WARN
+    com.kuakua.mirror: INFO
+  file:
+    name: /app/logs/application.log
+    max-size: 100MB
+    max-history: 30
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+  api-base: ${OPENAI_API_BASE:https://api.openai.com}

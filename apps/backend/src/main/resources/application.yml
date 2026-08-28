@@ -1,0 +1,65 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: kuakua-mirror
+
+  # 数据源配置
+  datasource:
+    url: ${DATABASE_URL:jdbc:h2:mem:kuakua_mirror}
+    username: ${DATABASE_USERNAME:sa}
+    password: ${DATABASE_PASSWORD:}
+    driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
+
+  # JPA 配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.H2Dialect}
+        format_sql: true
+
+  # H2 Console (开发用)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # WebFlux 配置
+  webflux:
+    base-path: /api
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.kuakua.mirror: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# OpenAI API 配置
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  api-base: ${OPENAI_API_BASE:https://api.openai.com}
+  model:
+    asr: whisper-1
+    llm: gpt-4o-realtime-preview
+    tts: tts-1
+
+# 音频配置
+audio:
+  format: pcm16
+  sample-rate: 24000
+  channels: 1
+
+# WebSocket 配置
+websocket:
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:*}
+
+# JWT 配置
+jwt:
+  secret: ${JWT_SECRET:default_secret_key_change_in_production_at_least_32_characters}
+  expiration: ${JWT_EXPIRATION:604800000}

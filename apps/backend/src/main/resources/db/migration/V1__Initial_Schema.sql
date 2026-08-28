@@ -1,0 +1,2 @@
+-- 已删除 Moment 领域相关的表（Ticket 03）
+-- 包括：users, moments, praises, conversations, themes, milestones, user_milestones, daily_reviews

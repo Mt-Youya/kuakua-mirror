@@ -1,0 +1,2 @@
+-- 已删除 Moment 领域相关的默认数据（Ticket 03）
+-- 包括：themes 和 milestones 表的默认数据
