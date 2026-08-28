@@ -19,9 +19,9 @@ logging:
     root: INFO
     com.kuakua.mirror: DEBUG
 
-openai:
-  api-key: ${OPENAI_API_KEY:}
-  api-base: ${OPENAI_API_BASE:https://api.openai.com}
+dashscope:
+  api-key: ${DASHSCOPE_API_KEY:}
+  tts-voice: ${DASHSCOPE_TTS_VOICE:}
 
 # 生产环境配置示例
 ---
@@ -42,6 +42,6 @@ logging:
     max-size: 100MB
     max-history: 30
 
-openai:
-  api-key: ${OPENAI_API_KEY}
-  api-base: ${OPENAI_API_BASE:https://api.openai.com}
+dashscope:
+  api-key: ${DASHSCOPE_API_KEY}
+  tts-voice: ${DASHSCOPE_TTS_VOICE}

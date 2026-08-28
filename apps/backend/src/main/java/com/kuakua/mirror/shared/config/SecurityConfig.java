@@ -27,7 +27,7 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/health", "/ws/**", "/api/auth/**").permitAll()
+                .requestMatchers("/api/health", "/api/praise/stream", "/api/chat/stream", "/api/tts", "/audio/**", "/api/auth/**").permitAll()
                 .anyRequest().authenticated()
             );
 

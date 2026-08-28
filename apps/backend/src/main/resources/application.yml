@@ -40,14 +40,21 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
-# OpenAI API 配置
-openai:
-  api-key: ${OPENAI_API_KEY:}
-  api-base: ${OPENAI_API_BASE:https://api.openai.com}
+# 阿里云百炼配置
+dashscope:
+  api-key: ${DASHSCOPE_API_KEY:}
+  base-url: ${DASHSCOPE_BASE_URL:}
+  websocket-url: ${DASHSCOPE_WEBSOCKET_URL:}
   model:
-    asr: whisper-1
-    llm: gpt-4o-realtime-preview
-    tts: tts-1
+    vision: ${DASHSCOPE_VISION_MODEL:qwen3-vl-plus}
+    text: ${DASHSCOPE_TEXT_MODEL:qwen-plus}
+    asr: ${DASHSCOPE_ASR_MODEL:qwen-audio-3.0-asr-flash-streaming}
+    tts: ${DASHSCOPE_TTS_MODEL:qwen-audio-3.0-tts-flash}
+  tts-voice: ${DASHSCOPE_TTS_VOICE:}
+
+k10:
+  audio-directory: ${K10_AUDIO_DIRECTORY:${java.io.tmpdir}/kuakua-mirror-audio}
+  audio-ttl-minutes: ${K10_AUDIO_TTL_MINUTES:10}
 
 # 音频配置
 audio:

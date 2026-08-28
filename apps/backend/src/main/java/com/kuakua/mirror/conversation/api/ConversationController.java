@@ -1,6 +1,6 @@
 package com.kuakua.mirror.conversation.api;
 
-import com.kuakua.mirror.ai.infra.OpenAIService;
+import com.kuakua.mirror.ai.infra.DashScopeService;
 import com.kuakua.mirror.conversation.domain.Message;
 import com.kuakua.mirror.conversation.dto.*;
 import com.kuakua.mirror.conversation.infra.MessageRepository;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class ConversationController {
 
     private final MessageRepository messageRepository;
-    private final OpenAIService openAIService;
+    private final DashScopeService dashScopeService;
     private final MonitorEventService monitorEventService;
 
     /**
@@ -109,8 +109,7 @@ public class ConversationController {
                     "你的任务是倾听用户的分享，给予真诚的鼓励和肯定。" +
                     "请用简洁、温暖的语言回复，让用户感受到被理解和支持。";
 
-            // 调用 OpenAI 生成回复
-            return openAIService.generateResponse(request.getContent(), systemPrompt)
+            return dashScopeService.generateResponse(request.getContent(), systemPrompt)
                     .map(aiResponse -> {
                         // 保存 AI 回复
                         Message assistantMessage = Message.builder()

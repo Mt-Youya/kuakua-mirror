@@ -50,13 +50,14 @@
 | 音频编码 | Base64 |
 | 流式传输 | SSE (Server-Sent Events) |
 
-### 1.3 认证方式
+### 1.3 请求标识
 
 | 请求头 | 说明 | 示例 |
 |--------|------|------|
-| `X-API-Key` | API 密钥 | `sk-xxxxxxxxxxxxxxxx` |
 | `X-Device-ID` | 设备唯一标识 | `k10-001` |
 | `Content-Type` | 数据格式 | `application/json` |
+
+硬件不得携带任何大模型凭证。百炼凭证仅由 Java 服务从运行环境读取。
 
 ### 1.4 通用响应格式
 
@@ -81,7 +82,6 @@
 ```http
 GET /api/health HTTP/1.1
 Host: 192.168.8.3:8080
-X-API-Key: your-api-key
 X-Device-ID: k10-001
 ```
 
@@ -134,7 +134,6 @@ POST /api/praise/stream HTTP/1.1
 Host: 192.168.8.3:8080
 Content-Type: application/json
 Accept: text/event-stream
-X-API-Key: your-api-key
 X-Device-ID: k10-001
 
 {
@@ -214,7 +213,6 @@ POST /api/chat/stream HTTP/1.1
 Host: 192.168.8.3:8080
 Content-Type: application/json
 Accept: text/event-stream
-X-API-Key: your-api-key
 X-Device-ID: k10-001
 
 {
@@ -305,14 +303,11 @@ data: {"type":"complete","user_text":"我今天好看吗","ai_text":"你看起�
 POST /api/tts HTTP/1.1
 Host: 192.168.8.3:8080
 Content-Type: application/json
-X-API-Key: your-api-key
 X-Device-ID: k10-001
 
 {
   "device_id": "k10-001",
-  "text": "你真好看",
-  "voice": "xiaoyun",
-  "format": "wav"
+  "text": "你真好看"
 }
 ```
 
@@ -322,17 +317,7 @@ X-Device-ID: k10-001
 |------|------|------|------|
 | `device_id` | string | 是 | 设备唯一标识 |
 | `text` | string | 是 | 要合成的文字（≤100字） |
-| `voice` | string | 否 | 语音角色，默认 `xiaoyun` |
-| `format` | string | 否 | 音频格式，默认 `wav` |
-
-#### 语音角色选项
-
-| 角色 | 说明 |
-|------|------|
-| `xiaoyun` | 女声，温柔 |
-| `xiaogang` | 男声，沉稳 |
-| `xiaomei` | 女声，甜美 |
-| `xiaowan` | 女声，活泼 |
+音色由服务端的 `DASHSCOPE_TTS_VOICE` 配置，硬件不能指定模型或音色；输出固定为 16 kHz WAV。
 
 #### 响应（成功）
 
@@ -360,15 +345,13 @@ X-Device-ID: k10-001
 ```http
 GET /audio/{filename} HTTP/1.1
 Host: 192.168.8.3:8080
-X-API-Key: your-api-key
-X-Device-ID: k10-001
 ```
 
 #### 路径参数
 
 | 参数 | 说明 | 示例 |
 |------|------|------|
-| `filename` | 音频文件名 | `praise_abc123.wav` |
+| `filename` | 音频文件名 | `UUID.wav` |
 
 #### 响应
 
@@ -376,7 +359,7 @@ X-Device-ID: k10-001
 HTTP/1.1 200 OK
 Content-Type: audio/wav
 Content-Length: 123456
-Cache-Control: max-age=3600
+Cache-Control: max-age=600
 
 [二进制音频数据]
 ```
@@ -397,8 +380,6 @@ Cache-Control: max-age=3600
 |--------|---------|------|-------------|
 | 200 | 200 | 成功 | 正常处理 |
 | 400 | 400 | 请求参数错误 | 显示"请求错误" |
-| 401 | 401 | API Key 无效或缺失 | 显示"认证失败" |
-| 403 | 403 | 设备未授权 | 显示"设备未授权" |
 | 404 | 404 | 接口不存在 | 显示"接口错误" |
 | 413 | 413 | 请求体过大 | 显示"文件太大" |
 | 429 | 429 | 请求频率限制 | 显示"请求太频繁" |
@@ -440,13 +421,13 @@ K10 上传图片
     ↓
 后端接收 Base64 → 解码为 JPEG → 保存临时文件
     ↓
-调用通义千问 VL API (qwen-vl-max)
+调用阿里云百炼视觉模型 (默认 `qwen3-vl-plus`)
     ↓
 解析 VL 返回的夸奖文字
     ↓
-调用通义千问 TTS API (qwen-tts)
+调用阿里云百炼语音合成模型 (默认 `qwen-audio-3.0-tts-flash`)
     ↓
-生成 WAV 音频 → 保存到静态目录
+生成 WAV 音频 → 保存到后端本地临时目录（默认保留 10 分钟）
     ↓
 SSE 流式返回：逐字文本 → 音频 URL → 完成
 ```
@@ -458,17 +439,17 @@ K10 上传音频
     ↓
 后端接收 Base64 → 解码为 WAV → 保存临时文件
     ↓
-调用通义千问 ASR API (paraformer)
+调用阿里云百炼语音识别模型 (默认 `qwen-audio-3.0-asr-flash-streaming`)
     ↓
 获取用户文字 → 保存到会话上下文
     ↓
-调用通义千问 LLM API (qwen-turbo)
+调用阿里云百炼文本模型 (默认 `qwen-plus`)
     ↓
 获取 AI 回复文字
     ↓
-调用通义千问 TTS API (qwen-tts)
+调用阿里云百炼语音合成模型 (默认 `qwen-audio-3.0-tts-flash`)
     ↓
-生成 WAV 音频 → 保存到静态目录
+生成 WAV 音频 → 保存到后端本地临时目录（默认保留 10 分钟）
     ↓
 SSE 流式返回：ASR结果 → 逐字文本 → 音频 URL → 完成
 ```
@@ -501,9 +482,7 @@ Value: {
 ### 8.1 健康检查
 
 ```bash
-curl -X GET "http://192.168.8.3:8080/api/health" \
-  -H "X-API-Key: your-api-key" \
-  -H "X-Device-ID: k10-001"
+curl -X GET "http://192.168.8.3:8080/api/health"
 ```
 
 ### 8.2 图片夸奖（SSE）
@@ -512,7 +491,6 @@ curl -X GET "http://192.168.8.3:8080/api/health" \
 curl -X POST "http://192.168.8.3:8080/api/praise/stream" \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
-  -H "X-API-Key: your-api-key" \
   -H "X-Device-ID: k10-001" \
   -d '{
     "device_id": "k10-001",
@@ -527,7 +505,6 @@ curl -X POST "http://192.168.8.3:8080/api/praise/stream" \
 curl -X POST "http://192.168.8.3:8080/api/chat/stream" \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
-  -H "X-API-Key: your-api-key" \
   -H "X-Device-ID: k10-001" \
   -d '{
     "device_id": "k10-001",
@@ -542,7 +519,6 @@ curl -X POST "http://192.168.8.3:8080/api/chat/stream" \
 ```bash
 curl -X POST "http://192.168.8.3:8080/api/tts" \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: your-api-key" \
   -H "X-Device-ID: k10-001" \
   -d '{
     "device_id": "k10-001",
@@ -556,8 +532,6 @@ curl -X POST "http://192.168.8.3:8080/api/tts" \
 
 ```bash
 curl -X GET "http://192.168.8.3:8080/audio/praise_abc123.wav" \
-  -H "X-API-Key: your-api-key" \
-  -H "X-Device-ID: k10-001" \
   --output praise.wav
 ```
 
@@ -572,7 +546,6 @@ curl -X GET "http://192.168.8.3:8080/audio/praise_abc123.wav" \
 #define WIFI_SSID "YourWiFi"
 #define WIFI_PASSWORD "YourPassword"
 #define SERVER_HOST "http://192.168.8.3:8080"
-#define API_KEY "your-api-key"
 #define DEVICE_ID "k10-001"
 ```
 

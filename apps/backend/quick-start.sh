@@ -15,25 +15,29 @@ export JWT_SECRET=default_jwt_secret_for_development_only_at_least_32_characters
 export WEBSOCKET_ALLOWED_ORIGINS=*
 export PORT=8080
 
-# 检查 OPENAI_API_KEY
-if [ -z "$OPENAI_API_KEY" ]; then
-    echo "⚠️  警告: OPENAI_API_KEY 未设置"
-    echo "使用方法: OPENAI_API_KEY=sk-your-key ./quick-start.sh"
-    echo ""
-    read -p "请输入你的 OpenAI API Key (或按 Enter 跳过): " input_key
-    if [ -n "$input_key" ]; then
-        export OPENAI_API_KEY="$input_key"
-    else
-        echo "⚠️  将使用空的 API Key（部分功能将不可用）"
-        export OPENAI_API_KEY=""
-    fi
+# macOS 的 /usr/bin/java 可能只是系统占位程序；优先使用已安装的 SDKMAN JDK 21。
+if [ -z "${JAVA_HOME:-}" ] && [ -x "$HOME/.sdkman/candidates/java/current/bin/java" ]; then
+    export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
+fi
+if [ -n "${JAVA_HOME:-}" ]; then
+    export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
+# 检查百炼凭证
+if [ -z "$DASHSCOPE_API_KEY" ]; then
+    echo "⚠️  DASHSCOPE_API_KEY 未设置，AI 接口不可用"
+    echo "请在终端环境中设置后重试。"
 fi
 
 echo ""
 echo "✅ 配置信息:"
 echo "   数据库: H2 内存数据库"
 echo "   端口: $PORT"
-echo "   OpenAI API Key: ${OPENAI_API_KEY:0:20}..."
+if [ -n "$DASHSCOPE_API_KEY" ]; then
+    echo "   百炼凭证: 已设置"
+else
+    echo "   百炼凭证: 未设置"
+fi
 echo ""
 
 # 检查 Maven

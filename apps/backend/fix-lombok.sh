@@ -11,9 +11,7 @@ BACKEND_DIR="/Users/yonjay/codes/hubs/kuakua-mirror/apps/backend/src/main/java/c
 echo "1. 添加 @Slf4j 注解..."
 
 FILES_NEED_SLF4J=(
-    "ai/infra/OpenAIService.java"
-    "ai/infra/OpenAIRealtimeService.java"
-    "audio/api/AudioWebSocketHandler.java"
+    "ai/infra/DashScopeService.java"
     "conversation/api/ConversationController.java"
     "monitor/service/MonitorEventService.java"
 )
