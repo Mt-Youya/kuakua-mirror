@@ -18,29 +18,60 @@
 ### 设备领域（Device Domain）
 
 #### Device（设备档案）
-设备的物理身份和静态信息。一个 Device 代表一台出厂的硬件镜子。
+设备的物理身份和静态信息。一个 Device 代表一台出厂登记的硬件镜子。
 
-- **属性**：deviceId（唯一标识）、serialNumber（序列号）、model（型号）、firmwareVersion（固件版本）、activatedAt（激活时间）
-- **生命周期**：设备出厂时创建，激活后绑定用户，退役时归档
+- **属性**：deviceId（唯一标识）、serialNumber（全局唯一序列号）、model（型号）、firmwareVersion（固件版本）、activatedAt（激活时间）
+- **生命周期**：设备出厂登记后等待激活；激活后可调用硬件接口；退役时归档
 - **职责**：存储设备档案，不包含运行时状态
 
-#### DeviceSession（设备会话）
-设备与后端的 WebSocket 连接状态。一次连接对应一个 DeviceSession。
+#### FactoryActivationCode（出厂激活码）
+设备出厂时与序列号一一绑定的一次性配对凭证。设备首次联网时提交序列号和该激活码，后端只接受预先登记的匹配项。
 
-- **属性**：sessionId、deviceId、status（CONNECTED/IDLE/BUSY）、connectedAt、lastActivityAt、capabilities（设备能力列表）
-- **生命周期**：WebSocket 连接建立时创建，连接断开时销毁
-- **职责**：管理连接状态、心跳检测、消息路由
-- **存储**：内存（ConcurrentHashMap），不持久化
+- **状态**：UNUSED、CONSUMED、REVOKED
+- **生命周期**：出厂登记时创建；首次成功激活后变为 CONSUMED；设备恢复出厂后由管理员签发新的恢复码
+- **安全边界**：服务端只保存激活码哈希，绝不保存或返回明文
+
+#### DeviceToken（设备令牌）
+设备激活成功后签发的设备级凭证。它用于证明硬件身份，不是大模型 API Key。
+
+- **生命周期**：激活时签发；恢复出厂、设备退役、数据迁移或管理员撤销时失效
+- **职责**：授权设备调用其自身的配置、心跳、AI、音频和运维接口
+- **安全边界**：服务端只保存令牌哈希；令牌所属设备必须与请求中的设备 ID 一致
+
+#### DeviceImage（设备图片）
+设备上传并归属到单一 Device 的图片制品。
+
+- **职责**：保存图片文件与采集时间、内容类型等元数据，供设备历史查询
+- **存储边界**：图片文件存入私有对象存储；数据库只保存元数据和对象引用
+- **调用边界**：上传图片不触发模型调用；图片夸奖由独立请求显式发起
+
+#### FirmwareRelease（固件发布）
+可供设备下载的不可变固件制品，包含版本、文件大小、SHA-256 校验值、Ed25519 签名和发布说明。
+
+- **职责**：决定指定硬件型号在 stable 渠道可获得的最新版本；不提供降级版本
+- **生命周期**：内部发布命令创建；设备下载并上报结果；已发布制品不可覆盖
+- **访问边界**：设备先以 DeviceToken 获取 OTA 检查结果，再使用短时下载 URL 获取制品
+
+#### DeviceDiagnosticLog（设备诊断日志）
+设备为排障上传的结构化运行记录，不包含用户输入、设备令牌、音频或图片内容。
+
+- **职责**：记录设备的异常与运行状态，供有限期历史查询
+- **边界**：单条日志最大 16 KiB，不作为通用数据采集通道
+
+#### DeviceOperationHistory（设备运行历史）
+按设备、类型和时间查询的只读记录视图，聚合设备图片、心跳、OTA 状态和设备日志。
+
+- **职责**：为硬件和后续运维提供分页历史查询，不承担实时状态管理
 
 #### DeviceProtocol（设备协议）
-硬件设备与后端通信的简化协议，由后端转换为 OpenAI Realtime API 格式。
+硬件设备与后端通信的 HTTP/SSE 契约。后端负责调用阿里云百炼的文本、视觉和语音模型；硬件不持有任何大模型凭证。
 
 - **消息类型**：
   - `audio`：音频数据（Base64 编码）
   - `audio_end`：音频输入结束
   - `text`：文本输入（备用）
   - `heartbeat`：心跳
-- **职责**：定义硬件侧的简单消息格式，避免硬件实现复杂的 OpenAI 协议
+- **职责**：定义硬件侧的简单请求和 SSE 事件格式，设备通过 DeviceToken 证明身份
 
 ---
 
@@ -126,7 +157,7 @@ TTS 生成的语音输出。
 ## 技术组件
 
 ### 后端服务（Backend Service）
-运行在云端的 WebSocket 服务器，接收设备端音频流，调用 OpenAI Realtime API，将结果推送回设备。
+运行在云端的 Java HTTP/SSE 服务，接收设备图片或音频请求，调用阿里云百炼，并管理 Supabase 私有对象制品。
 
 ### 音频格式
 - **编码**：Opus
@@ -136,7 +167,7 @@ TTS 生成的语音输出。
 
 ### 协议层次
 ```
-硬件设备 <--[DeviceProtocol]--> 后端服务 <--[OpenAI Realtime API]--> OpenAI
+硬件设备 <--[DeviceToken + HTTP/SSE]--> Java 后端 <--[DashScope SDK]--> 阿里云百炼
 ```
 
 ---
@@ -145,12 +176,10 @@ TTS 生成的语音输出。
 
 ### 调试期
 - 后端运行在开发笔记本（局域网）
-- 设备通过 WiFi 连接 `ws://192.168.x.x:8080/device/ws`
-- 前端监控页面运行在 `localhost:3000`
+- 设备通过 WiFi 调用 `http://192.168.x.x:8080/api/...`
 
 ### 演示期（MVP）
-- 后端部署到 Railway（`wss://kuakua-mirror.railway.app`）
-- 前端部署到 Vercel（`https://kuakua-mirror.vercel.app`）
+- 后端部署到 Railway（`https://kuakua-api.cyrusdoyle.me`）
 - 数据库：Supabase PostgreSQL
 - 设备通过 TLS 连接后端
 
@@ -159,7 +188,7 @@ TTS 生成的语音输出。
 ## MVP 范围约束
 
 ### 包含的领域
-- 设备连接管理（Device、DeviceSession）
+- 设备激活和制品管理（Device、FactoryActivationCode、FirmwareRelease）
 - 实时对话（RealtimeConversation、Message）
 - 音频处理（AudioChunk、Transcription）
 
@@ -170,12 +199,11 @@ TTS 生成的语音输出。
 - 人脸存在感知（Face Presence Detection）
 
 ### MVP 核心流程
-1. 设备连接后端 WebSocket
-2. 用户按键唤醒 → 发送音频
-3. 后端转发给 OpenAI → 识别 + 生成回复
-4. 后端返回文字和语音给设备
+1. 出厂设备以序列号和一次性码激活
+2. 用户按键唤醒 → 设备提交音频请求
+3. Java 后端调用阿里云百炼 → 识别 + 生成回复
+4. 后端通过 SSE 返回文字和短时受保护音频 URL
 5. 设备显示文字 + 播放语音
-6. 对话历史保存到数据库
 
 ---
 

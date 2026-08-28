@@ -19,8 +19,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException e) {
         log.error("业务异常: code={}, message={}", e.getCode(), e.getMessage());
+        HttpStatus status = switch (e.getCode()) {
+            case "UNAUTHORIZED" -> HttpStatus.UNAUTHORIZED;
+            case "ARTIFACT_STORAGE_UNAVAILABLE", "FIRMWARE_SIGNING_UNAVAILABLE" -> HttpStatus.SERVICE_UNAVAILABLE;
+            default -> HttpStatus.BAD_REQUEST;
+        };
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(status)
                 .body(Map.of(
                         "code", e.getCode(),
                         "message", e.getMessage(),

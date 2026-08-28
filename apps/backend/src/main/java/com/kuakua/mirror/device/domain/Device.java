@@ -32,7 +32,8 @@ public class Device {
 
     private String macAddress;
 
-    private String deviceToken;
+    @Column(name = "device_token_hash")
+    private String deviceTokenHash;
 
     @Enumerated(EnumType.STRING)
     private DeviceStatus status;

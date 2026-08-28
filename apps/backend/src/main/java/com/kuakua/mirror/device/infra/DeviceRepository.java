@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface DeviceRepository extends JpaRepository<Device, String> {
 
-    Optional<Device> findByActivationCode(String activationCode);
+    Optional<Device> findBySerialNumber(String serialNumber);
 
-    Optional<Device> findByDeviceToken(String deviceToken);
+    Optional<Device> findByDeviceTokenHash(String deviceTokenHash);
 }

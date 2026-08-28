@@ -2,6 +2,8 @@ package com.kuakua.mirror.k10;
 
 import com.alibaba.dashscope.common.Message;
 import com.kuakua.mirror.ai.infra.DashScopeService;
+import com.kuakua.mirror.device.domain.Device;
+import com.kuakua.mirror.shared.exception.BusinessException;
 import com.kuakua.mirror.k10.LocalAudioStore.StoredAudio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -44,11 +47,9 @@ public class K10Controller {
     @PostMapping(value = "/api/praise/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<Map<String, Object>>> praise(
             @RequestHeader("X-Device-ID") String deviceId,
+            @AuthenticationPrincipal Device device,
             @RequestBody PraiseRequest request) {
-        String error = validateDevice(deviceId, request.deviceId());
-        if (error != null) {
-            return Flux.just(event(Map.of("type", "error", "message", error)));
-        }
+        validateDevice(device, deviceId, request.deviceId());
         byte[] image;
         try {
             image = decode(request.imageBase64(), MAX_IMAGE_BYTES, "图片");
@@ -63,7 +64,7 @@ public class K10Controller {
                 dashScopeService.streamImagePraise("data:image/jpeg;base64," + Base64.getEncoder().encodeToString(image))
                         .doOnNext(praise::append)
                         .map(text -> event(Map.of("type", "text", "content", text, "index", index.getAndIncrement()))),
-                Flux.defer(() -> synthesizeEvent(praise.toString())),
+                Flux.defer(() -> synthesizeEvent(deviceId, praise.toString())),
                 Mono.fromSupplier(() -> event(Map.of(
                         "type", "complete",
                         "full_text", praise.toString(),
@@ -75,10 +76,11 @@ public class K10Controller {
     @PostMapping(value = "/api/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<Map<String, Object>>> chat(
             @RequestHeader("X-Device-ID") String deviceId,
+            @AuthenticationPrincipal Device device,
             @RequestBody ChatRequest request) {
-        String error = validateDevice(deviceId, request.deviceId());
-        if (error != null || isBlank(request.sessionId())) {
-            return Flux.just(event(Map.of("type", "error", "message", error != null ? error : "session_id 不能为空")));
+        validateDevice(device, deviceId, request.deviceId());
+        if (isBlank(request.sessionId())) {
+            return Flux.just(event(Map.of("type", "error", "message", "session_id 不能为空")));
         }
         byte[] audio;
         try {
@@ -101,7 +103,7 @@ public class K10Controller {
                                     .map(text -> event(Map.of("type", "text", "content", text, "index", index.getAndIncrement()))),
                             Flux.defer(() -> {
                                 appendAssistantMessage(deviceId, request.sessionId(), reply.toString());
-                                return synthesizeEvent(reply.toString());
+                                return synthesizeEvent(deviceId, reply.toString());
                             }),
                             Mono.fromSupplier(() -> event(Map.of(
                                     "type", "complete",
@@ -117,22 +119,26 @@ public class K10Controller {
     @PostMapping("/api/tts")
     public Mono<ResponseEntity<K10Response<Map<String, Object>>>> tts(
             @RequestHeader("X-Device-ID") String deviceId,
+            @AuthenticationPrincipal Device device,
             @RequestBody TtsRequest request) {
-        String error = validateDevice(deviceId, request.deviceId());
-        if (error != null || isBlank(request.text()) || request.text().length() > MAX_TEXT_LENGTH) {
+        validateDevice(device, deviceId, request.deviceId());
+        if (isBlank(request.text()) || request.text().length() > MAX_TEXT_LENGTH) {
             return Mono.just(ResponseEntity.badRequest().body(K10Response.error(400,
-                    error != null ? error : "text 必须为 1 到 100 个字符")));
+                    "text 必须为 1 到 100 个字符")));
         }
         return dashScopeService.synthesize(request.text())
-                .map(this::storeAudio)
+                .map(audio -> storeAudio(deviceId, audio))
                 .map(audio -> ResponseEntity.ok(K10Response.success(audioData(audio))))
                 .onErrorResume(exception -> Mono.just(ResponseEntity.internalServerError()
                         .body(K10Response.error(500, "语音合成失败"))));
     }
 
     @GetMapping("/audio/{filename:.+}")
-    public ResponseEntity<FileSystemResource> audio(@PathVariable String filename) {
-        FileSystemResource audio = audioStore.find(filename);
+    public ResponseEntity<FileSystemResource> audio(@PathVariable String filename, @AuthenticationPrincipal Device device) {
+        if (audioStore.ownedByAnotherDevice(device.getDeviceId(), filename)) {
+            throw new BusinessException("UNAUTHORIZED", "设备无权访问该音频");
+        }
+        FileSystemResource audio = audioStore.find(device.getDeviceId(), filename);
         if (audio == null) {
             return ResponseEntity.notFound().build();
         }
@@ -143,12 +149,12 @@ public class K10Controller {
                 .body(audio);
     }
 
-    private Flux<ServerSentEvent<Map<String, Object>>> synthesizeEvent(String text) {
+    private Flux<ServerSentEvent<Map<String, Object>>> synthesizeEvent(String deviceId, String text) {
         if (isBlank(text)) {
             return Flux.empty();
         }
         return dashScopeService.synthesize(text)
-                .map(this::storeAudio)
+                .map(audio -> storeAudio(deviceId, audio))
                 .map(audio -> event(Map.of(
                         "type", "audio",
                         "url", "/audio/" + audio.filename(),
@@ -157,9 +163,9 @@ public class K10Controller {
                 .flux();
     }
 
-    private StoredAudio storeAudio(byte[] audio) {
+    private StoredAudio storeAudio(String deviceId, byte[] audio) {
         try {
-            return audioStore.store(audio);
+            return audioStore.store(deviceId, audio);
         } catch (Exception exception) {
             throw new IllegalStateException("无法保存音频", exception);
         }
@@ -229,14 +235,13 @@ public class K10Controller {
         return bytes;
     }
 
-    private String validateDevice(String headerDeviceId, String bodyDeviceId) {
+    private void validateDevice(Device device, String headerDeviceId, String bodyDeviceId) {
         if (isBlank(headerDeviceId)) {
-            return "缺少 X-Device-ID";
+            throw new BusinessException("UNAUTHORIZED", "设备标识不一致");
         }
-        if (isBlank(bodyDeviceId) || !headerDeviceId.equals(bodyDeviceId)) {
-            return "设备标识不一致";
+        if (isBlank(bodyDeviceId) || !headerDeviceId.equals(bodyDeviceId) || !headerDeviceId.equals(device.getDeviceId())) {
+            throw new BusinessException("UNAUTHORIZED", "设备标识不一致");
         }
-        return null;
     }
 
     private boolean isBlank(String value) {

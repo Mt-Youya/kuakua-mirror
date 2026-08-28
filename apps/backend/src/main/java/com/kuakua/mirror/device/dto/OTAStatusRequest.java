@@ -16,6 +16,8 @@ public class OTAStatusRequest {
 
     private String status;         // downloading, verifying, installing, success, failed
 
+    private String version;
+
     private Integer progress;      // 0-100
 
     private String error;          // 错误信息（如果失败）

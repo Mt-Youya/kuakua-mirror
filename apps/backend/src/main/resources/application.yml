@@ -56,6 +56,23 @@ k10:
   audio-directory: ${K10_AUDIO_DIRECTORY:${java.io.tmpdir}/kuakua-mirror-audio}
   audio-ttl-minutes: ${K10_AUDIO_TTL_MINUTES:10}
 
+supabase:
+  url: ${SUPABASE_URL:}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+  image-bucket: ${SUPABASE_IMAGE_BUCKET:device-images}
+  firmware-bucket: ${SUPABASE_FIRMWARE_BUCKET:device-firmware}
+
+factory:
+  provisioning-csv: ${FACTORY_PROVISIONING_CSV:}
+
+firmware:
+  signing-private-key: ${FIRMWARE_SIGNING_PRIVATE_KEY:}
+  publish:
+    file: ${FIRMWARE_PUBLISH_FILE:}
+    model: ${FIRMWARE_PUBLISH_MODEL:}
+    version: ${FIRMWARE_PUBLISH_VERSION:}
+    notes: ${FIRMWARE_PUBLISH_NOTES:}
+
 # 音频配置
 audio:
   format: pcm16

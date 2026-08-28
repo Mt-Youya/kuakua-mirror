@@ -24,5 +24,9 @@ public class OTACheckResponse {
 
     private String checksum;
 
+    private String manifest;
+
+    private String signature;
+
     private String releaseNotes;
 }

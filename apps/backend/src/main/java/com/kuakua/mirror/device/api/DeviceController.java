@@ -4,10 +4,14 @@ import com.kuakua.mirror.device.domain.Device;
 import com.kuakua.mirror.device.domain.DeviceConfig;
 import com.kuakua.mirror.device.dto.*;
 import com.kuakua.mirror.device.infra.DeviceService;
+import com.kuakua.mirror.device.infra.DeviceArtifactService;
+import com.kuakua.mirror.device.infra.FirmwareReleaseService;
+import com.kuakua.mirror.device.infra.DeviceOperationService;
 import com.kuakua.mirror.shared.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -20,6 +24,9 @@ import org.springframework.web.bind.annotation.*;
 public class DeviceController {
 
     private final DeviceService deviceService;
+    private final DeviceArtifactService artifactService;
+    private final FirmwareReleaseService firmwareReleaseService;
+    private final DeviceOperationService operationService;
 
     /**
      * 设备激活
@@ -29,9 +36,7 @@ public class DeviceController {
     public ResponseEntity<ApiResponse<DeviceActivateResponse>> activateDevice(
             @RequestBody DeviceActivateRequest request) {
 
-        log.info("设备激活请求: activationCode={}", request.getActivationCode());
-
-        Device device = deviceService.activateDevice(
+        DeviceService.Activation activation = deviceService.activateDevice(
                 request.getActivationCode(),
                 request.getDeviceInfo().getModel(),
                 request.getDeviceInfo().getSerialNumber(),
@@ -40,8 +45,8 @@ public class DeviceController {
         );
 
         DeviceActivateResponse response = DeviceActivateResponse.builder()
-                .deviceId(device.getDeviceId())
-                .token(device.getDeviceToken())
+                .deviceId(activation.device().getDeviceId())
+                .token(activation.token())
                 .message("设备激活成功")
                 .build();
 
@@ -55,11 +60,8 @@ public class DeviceController {
     @GetMapping("/{deviceId}/config")
     public ResponseEntity<ApiResponse<DeviceConfigResponse>> getDeviceConfig(
             @PathVariable String deviceId,
-            @RequestHeader("Authorization") String authHeader) {
-
-        // 验证Bearer Token
-        String token = extractToken(authHeader);
-        deviceService.verifyDeviceToken(token);
+            @AuthenticationPrincipal Device device) {
+        owned(device, deviceId);
 
         DeviceConfig config = deviceService.getDeviceConfig(deviceId);
 
@@ -82,11 +84,9 @@ public class DeviceController {
     @PatchMapping("/{deviceId}/config")
     public ResponseEntity<ApiResponse<DeviceConfigResponse>> updateDeviceConfig(
             @PathVariable String deviceId,
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal Device device,
             @RequestBody DeviceConfigUpdateRequest request) {
-
-        String token = extractToken(authHeader);
-        deviceService.verifyDeviceToken(token);
+        owned(device, deviceId);
 
         DeviceConfig updates = DeviceConfig.builder()
                 .volume(request.getVolume())
@@ -118,17 +118,11 @@ public class DeviceController {
     @PostMapping("/{deviceId}/heartbeat")
     public ResponseEntity<ApiResponse<String>> deviceHeartbeat(
             @PathVariable String deviceId,
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal Device device,
             @RequestBody DeviceHeartbeatRequest request) {
+        owned(device, deviceId);
 
-        String token = extractToken(authHeader);
-        deviceService.verifyDeviceToken(token);
-
-        deviceService.updateHeartbeat(deviceId);
-
-        log.debug("设备心跳: deviceId={}, uptime={}, memory={}, cpu={}, temp={}",
-                deviceId, request.getUptime(), request.getMemoryUsage(),
-                request.getCpuUsage(), request.getTemperature());
+        operationService.recordHeartbeat(deviceId, request);
 
         return ResponseEntity.ok(ApiResponse.success("心跳已记录"));
     }
@@ -140,19 +134,22 @@ public class DeviceController {
     @PostMapping("/{deviceId}/images")
     public ResponseEntity<ApiResponse<String>> uploadImage(
             @PathVariable String deviceId,
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal Device device,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        owned(device, deviceId);
 
-        String token = extractToken(authHeader);
-        deviceService.verifyDeviceToken(token);
+        var image = artifactService.uploadImage(deviceId, file);
+        return ResponseEntity.ok(ApiResponse.success(artifactService.signedImageUrl(image)));
+    }
 
-        // TODO: 实现图片存储逻辑（S3/OSS/本地存储）
-        String imageUrl = "https://example.com/images/" + deviceId + "/" + file.getOriginalFilename();
-
-        log.info("图片上传成功: deviceId={}, filename={}, size={}",
-                deviceId, file.getOriginalFilename(), file.getSize());
-
-        return ResponseEntity.ok(ApiResponse.success(imageUrl));
+    @GetMapping("/{deviceId}/images")
+    public ResponseEntity<ApiResponse<java.util.List<java.util.Map<String, Object>>>> images(
+            @PathVariable String deviceId, @AuthenticationPrincipal Device device) {
+        owned(device, deviceId);
+        var result = artifactService.images(deviceId).stream().map(image -> java.util.Map.<String, Object>of(
+                "id", image.getId(), "contentType", image.getContentType(), "fileSize", image.getFileSize(),
+                "uploadedAt", image.getUploadedAt().toString(), "downloadUrl", artifactService.signedImageUrl(image))).toList();
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     /**
@@ -162,22 +159,19 @@ public class DeviceController {
     @GetMapping("/{deviceId}/ota/check")
     public ResponseEntity<ApiResponse<OTACheckResponse>> checkOTAUpdate(
             @PathVariable String deviceId,
-            @RequestHeader("Authorization") String authHeader) {
+            @AuthenticationPrincipal Device device) {
+        owned(device, deviceId);
 
-        String token = extractToken(authHeader);
-        Device device = deviceService.verifyDeviceToken(token);
-
-        // TODO: 实际的OTA更新逻辑
-        String currentVersion = device.getFirmwareVersion();
-        String latestVersion = "1.0.0";
-
+        var release = firmwareReleaseService.newerStableRelease(device);
         OTACheckResponse response = OTACheckResponse.builder()
-                .updateAvailable(false)
-                .version(latestVersion)
-                .downloadUrl(null)
-                .fileSize(null)
-                .checksum(null)
-                .releaseNotes("当前已是最新版本")
+                .updateAvailable(release != null)
+                .version(release == null ? device.getFirmwareVersion() : release.getVersion())
+                .downloadUrl(release == null ? null : firmwareReleaseService.signedDownloadUrl(release))
+                .fileSize(release == null ? null : release.getFileSize())
+                .checksum(release == null ? null : release.getChecksum())
+                .manifest(release == null ? null : release.getManifest())
+                .signature(release == null ? null : release.getSignature())
+                .releaseNotes(release == null ? "当前已是最新版本" : release.getReleaseNotes())
                 .build();
 
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -190,16 +184,11 @@ public class DeviceController {
     @PostMapping("/{deviceId}/ota/status")
     public ResponseEntity<ApiResponse<String>> reportOTAStatus(
             @PathVariable String deviceId,
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal Device device,
             @RequestBody OTAStatusRequest request) {
+        owned(device, deviceId);
 
-        String token = extractToken(authHeader);
-        deviceService.verifyDeviceToken(token);
-
-        log.info("OTA状态上报: deviceId={}, status={}, progress={}",
-                deviceId, request.getStatus(), request.getProgress());
-
-        // TODO: 存储OTA状态到数据库
+        firmwareReleaseService.reportStatus(device, request.getVersion(), request.getStatus(), request.getProgress(), request.getError());
 
         return ResponseEntity.ok(ApiResponse.success("OTA状态已记录"));
     }
@@ -211,16 +200,11 @@ public class DeviceController {
     @PostMapping("/{deviceId}/logs")
     public ResponseEntity<ApiResponse<String>> uploadLogs(
             @PathVariable String deviceId,
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal Device device,
             @RequestBody DeviceLogRequest request) {
+        owned(device, deviceId);
 
-        String token = extractToken(authHeader);
-        deviceService.verifyDeviceToken(token);
-
-        log.info("设备日志: deviceId={}, level={}, message={}",
-                deviceId, request.getLevel(), request.getMessage());
-
-        // TODO: 存储日志到日志系统（ELK/Loki等）
+        operationService.recordDiagnosticLog(deviceId, request);
 
         return ResponseEntity.ok(ApiResponse.success("日志已接收"));
     }
@@ -232,28 +216,16 @@ public class DeviceController {
     @GetMapping("/{deviceId}/history")
     public ResponseEntity<ApiResponse<HistoryQueryResponse>> queryHistory(
             @PathVariable String deviceId,
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal Device device,
             @RequestParam String type,
             @RequestParam Long start,
             @RequestParam Long end,
             @RequestParam(defaultValue = "100") Integer limit,
             @RequestParam(defaultValue = "0") Integer offset) {
 
-        String token = extractToken(authHeader);
-        deviceService.verifyDeviceToken(token);
+        owned(device, deviceId);
 
-        log.info("历史数据查询: deviceId={}, type={}, start={}, end={}",
-                deviceId, type, start, end);
-
-        // TODO: 从数据库查询历史数据
-        HistoryQueryResponse response = HistoryQueryResponse.builder()
-                .records(java.util.Collections.emptyList())
-                .pagination(HistoryQueryResponse.Pagination.builder()
-                        .total(0)
-                        .limit(limit)
-                        .offset(offset)
-                        .build())
-                .build();
+        HistoryQueryResponse response = operationService.history(deviceId, type, start, end, limit, offset);
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -261,10 +233,7 @@ public class DeviceController {
     /**
      * 从Authorization header提取token
      */
-    private String extractToken(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Invalid Authorization header");
-        }
-        return authHeader.substring(7);
+    private void owned(Device device, String deviceId) {
+        deviceService.requireOwner(device, deviceId);
     }
 }

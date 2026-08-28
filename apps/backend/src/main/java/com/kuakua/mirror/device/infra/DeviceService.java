@@ -3,15 +3,15 @@ package com.kuakua.mirror.device.infra;
 import com.kuakua.mirror.device.domain.Device;
 import com.kuakua.mirror.device.domain.DeviceConfig;
 import com.kuakua.mirror.device.domain.DeviceStatus;
+import com.kuakua.mirror.device.domain.FactoryActivationCode;
 import com.kuakua.mirror.shared.exception.BusinessException;
-import com.kuakua.mirror.shared.util.IdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.security.SecureRandom;
 
 /**
  * 设备服务
@@ -23,58 +23,51 @@ public class DeviceService {
 
     private final DeviceRepository deviceRepository;
     private final DeviceConfigRepository deviceConfigRepository;
+    private final FactoryActivationCodeRepository activationCodeRepository;
 
     /**
      * 设备激活
      */
     @Transactional
-    public Device activateDevice(String activationCode, String model, String serialNumber,
+    public Activation activateDevice(String activationCode, String model, String serialNumber,
                                   String firmwareVersion, String macAddress) {
-        // 验证激活码（简化版，实际应该预先生成激活码）
-        if (activationCode == null || activationCode.length() < 6) {
-            throw new BusinessException("INVALID_ACTIVATION_CODE", "激活码无效");
+        if (activationCode == null || activationCode.isBlank()) {
+            throw new BusinessException("ACTIVATION_CODE_INVALID", "激活码无效或已使用");
+        }
+        FactoryActivationCode factoryCode = activationCodeRepository.findByCodeHash(FactoryProvisioningService.hash(activationCode))
+                .filter(code -> code.getConsumedAt() == null)
+                .orElseThrow(() -> new BusinessException("ACTIVATION_CODE_INVALID", "激活码无效或已使用"));
+        Device device = deviceRepository.findById(factoryCode.getDeviceId())
+                .orElseThrow(() -> new BusinessException("DEVICE_NOT_FOUND", "设备不存在"));
+        if (!device.getSerialNumber().equals(serialNumber) || !device.getModel().equals(model)) {
+            throw new BusinessException("ACTIVATION_CODE_INVALID", "激活码与设备不匹配");
         }
 
-        // 检查设备是否已激活
-        deviceRepository.findByActivationCode(activationCode)
-                .ifPresent(device -> {
-                    throw new BusinessException("DEVICE_ALREADY_ACTIVATED", "设备已激活");
-                });
-
-        // 生成设备ID和Token
-        String deviceId = "device_" + IdGenerator.generateId();
-        String deviceToken = UUID.randomUUID().toString().replace("-", "");
-
-        // 创建设备
-        Device device = Device.builder()
-                .deviceId(deviceId)
-                .activationCode(activationCode)
-                .model(model)
-                .serialNumber(serialNumber)
-                .firmwareVersion(firmwareVersion)
-                .macAddress(macAddress)
-                .deviceToken(deviceToken)
-                .status(DeviceStatus.OFFLINE)
-                .activatedAt(LocalDateTime.now())
-                .build();
-
-        device = deviceRepository.save(device);
+        String deviceToken = newToken();
+        device.setDeviceTokenHash(FactoryProvisioningService.hash(deviceToken));
+        device.setFirmwareVersion(firmwareVersion);
+        device.setMacAddress(macAddress);
+        device.setStatus(DeviceStatus.OFFLINE);
+        device.setActivatedAt(LocalDateTime.now());
+        deviceRepository.save(device);
+        factoryCode.setConsumedAt(LocalDateTime.now());
+        activationCodeRepository.save(factoryCode);
 
         // 创建默认配置
-        DeviceConfig config = DeviceConfig.builder()
-                .deviceId(deviceId)
-                .volume(50)
-                .brightness(80)
-                .wakeWord("你好镜子")
-                .language("zh-CN")
-                .timezone("Asia/Shanghai")
-                .autoUpdate(true)
-                .build();
+        if (!deviceConfigRepository.existsById(device.getDeviceId())) {
+            deviceConfigRepository.save(DeviceConfig.builder()
+                    .deviceId(device.getDeviceId())
+                    .volume(50)
+                    .brightness(80)
+                    .wakeWord("你好镜子")
+                    .language("zh-CN")
+                    .timezone("Asia/Shanghai")
+                    .autoUpdate(true)
+                    .build());
+        }
 
-        deviceConfigRepository.save(config);
-
-        log.info("设备激活成功: deviceId={}", deviceId);
-        return device;
+        log.info("设备激活成功: deviceId={}", device.getDeviceId());
+        return new Activation(device, deviceToken);
     }
 
     /**
@@ -133,8 +126,17 @@ public class DeviceService {
      * 验证设备Token
      */
     public Device verifyDeviceToken(String deviceToken) {
-        return deviceRepository.findByDeviceToken(deviceToken)
+        if (deviceToken == null || deviceToken.isBlank()) {
+            throw new BusinessException("UNAUTHORIZED", "设备Token无效");
+        }
+        return deviceRepository.findByDeviceTokenHash(FactoryProvisioningService.hash(deviceToken))
                 .orElseThrow(() -> new BusinessException("UNAUTHORIZED", "设备Token无效"));
+    }
+
+    public void requireOwner(Device device, String deviceId) {
+        if (!device.getDeviceId().equals(deviceId)) {
+            throw new BusinessException("UNAUTHORIZED", "设备Token无效");
+        }
     }
 
     /**
@@ -143,5 +145,14 @@ public class DeviceService {
     public Device getDevice(String deviceId) {
         return deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new BusinessException("DEVICE_NOT_FOUND", "设备不存在"));
+    }
+
+    private String newToken() {
+        byte[] bytes = new byte[32];
+        new SecureRandom().nextBytes(bytes);
+        return java.util.HexFormat.of().formatHex(bytes);
+    }
+
+    public record Activation(Device device, String token) {
     }
 }

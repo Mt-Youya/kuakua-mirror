@@ -1,37 +1,42 @@
 package com.kuakua.mirror.controller;
 
 import com.kuakua.mirror.shared.controller.HealthController;
+import com.kuakua.mirror.device.infra.DeviceService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
 
-@WebFluxTest(HealthController.class)
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(HealthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class HealthControllerTest {
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc mockMvc;
+
+    @MockBean
+    private DeviceService deviceService;
 
     @Test
-    void testHealth() {
-        webTestClient.get()
-                .uri("/api/health")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.status").isEqualTo("UP")
-                .jsonPath("$.service").isEqualTo("kuakua-mirror")
-                .jsonPath("$.timestamp").exists();
+    void testHealth() throws Exception {
+        mockMvc.perform(get("/api/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.service").value("kuakua-mirror"))
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
-    void testVersion() {
-        webTestClient.get()
-                .uri("/api/version")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.version").isEqualTo("1.0.0")
-                .jsonPath("$.name").isEqualTo("KuaKua Mirror Backend");
+    void testVersion() throws Exception {
+        mockMvc.perform(get("/api/version"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value("1.0.0"))
+                .andExpect(jsonPath("$.name").value("KuaKua Mirror Backend"));
     }
 }

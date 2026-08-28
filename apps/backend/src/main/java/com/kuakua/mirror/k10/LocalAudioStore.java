@@ -15,6 +15,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class LocalAudioStore {
@@ -26,6 +27,7 @@ public class LocalAudioStore {
     private long audioTtlMinutes;
 
     private Path directory;
+    private final ConcurrentHashMap<String, String> owners = new ConcurrentHashMap<>();
 
     @PostConstruct
     void initialize() throws IOException {
@@ -33,22 +35,27 @@ public class LocalAudioStore {
         Files.createDirectories(directory);
     }
 
-    public StoredAudio store(byte[] wav) throws IOException {
+    public StoredAudio store(String deviceId, byte[] wav) throws IOException {
         String filename = UUID.randomUUID() + ".wav";
         Path file = directory.resolve(filename);
         Files.write(file, wav, StandardOpenOption.CREATE_NEW);
+        owners.put(filename, deviceId);
         return new StoredAudio(filename, wavDuration(wav));
     }
 
-    public FileSystemResource find(String filename) {
+    public FileSystemResource find(String deviceId, String filename) {
         if (!filename.matches("[a-f0-9-]+\\.wav")) {
             return null;
         }
         Path file = directory.resolve(filename).normalize();
-        if (!file.startsWith(directory) || !Files.isRegularFile(file)) {
+        if (!deviceId.equals(owners.get(filename)) || !file.startsWith(directory) || !Files.isRegularFile(file)) {
             return null;
         }
         return new FileSystemResource(file);
+    }
+
+    public boolean ownedByAnotherDevice(String deviceId, String filename) {
+        return filename.matches("[a-f0-9-]+\\.wav") && owners.containsKey(filename) && !deviceId.equals(owners.get(filename));
     }
 
     @Scheduled(fixedRate = 60_000)
@@ -72,6 +79,7 @@ public class LocalAudioStore {
     private void deleteQuietly(Path file) {
         try {
             Files.deleteIfExists(file);
+            owners.remove(file.getFileName().toString());
         } catch (IOException ignored) {
         }
     }
