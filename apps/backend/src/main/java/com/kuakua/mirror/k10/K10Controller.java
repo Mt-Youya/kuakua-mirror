@@ -3,6 +3,7 @@ package com.kuakua.mirror.k10;
 import com.alibaba.dashscope.common.Message;
 import com.kuakua.mirror.ai.infra.DashScopeService;
 import com.kuakua.mirror.device.domain.Device;
+import com.kuakua.mirror.praise.PraiseMirrorPipelineService;
 import com.kuakua.mirror.shared.exception.BusinessException;
 import com.kuakua.mirror.k10.LocalAudioStore.StoredAudio;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class K10Controller {
     private static final String SYSTEM_PROMPT = "你是夸夸镜，一个温暖、真诚的 AI 助手。请用简洁自然的中文鼓励用户。";
 
     private final DashScopeService dashScopeService;
+    private final PraiseMirrorPipelineService praiseMirrorPipelineService;
     private final LocalAudioStore audioStore;
     private final Map<String, ChatSession> sessions = new ConcurrentHashMap<>();
 
@@ -66,15 +68,20 @@ public class K10Controller {
         AtomicInteger index = new AtomicInteger();
         return Flux.concat(
                 Flux.just(event(Map.of("type", "status", "content", "正在分析照片...", "step", 1))),
-                dashScopeService.streamImagePraise("data:image/jpeg;base64," + Base64.getEncoder().encodeToString(image))
-                        .doOnNext(praise::append)
-                        .map(text -> event(Map.of("type", "text", "content", text, "index", index.getAndIncrement()))),
-                Flux.defer(() -> synthesizeEvent(deviceId, praise.toString())),
-                Mono.fromSupplier(() -> event(Map.of(
-                        "type", "complete",
-                        "full_text", praise.toString(),
-                        "praise_id", "praise-" + System.currentTimeMillis()
-                ))).flux()
+                Flux.just(event(Map.of("type", "status", "content", "正在生成专属夸夸...", "step", 2))),
+                praiseMirrorPipelineService.generatePraise(Base64.getEncoder().encodeToString(image), null)
+                        .flatMapMany(result -> {
+                            praise.append(result.getPraiseSentence());
+                            return Flux.concat(
+                                    Flux.just(event(Map.of("type", "text", "content", praise.toString(), "index", index.getAndIncrement()))),
+                                    Flux.defer(() -> synthesizeEvent(deviceId, praise.toString())),
+                                    Mono.fromSupplier(() -> event(Map.of(
+                                            "type", "complete",
+                                            "full_text", praise.toString(),
+                                            "praise_id", "praise-" + System.currentTimeMillis()
+                                    ))).flux()
+                            );
+                        })
         ).onErrorResume(exception -> Flux.just(event(Map.of("type", "error", "message", "服务繁忙"))));
     }
 

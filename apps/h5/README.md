@@ -1,23 +1,10 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 夸夸镜 H5 演示
 
-# 夸夸镜 · AI情绪支持伴侣
+AI 情绪支持伴侣 H5 原型，包含此刻、成长、回顾、个人页、引导和登录。聊天、夸夸和里程碑反馈均为本地虚拟数据，不连接 K10、Java 后端或真实模型。
 
-同一面"想成为的自己"，在镜子前夸你一句，在APP里陪你说话。
+```bash
+pnpm install
+pnpm dev
+```
 
-> 本项目为黑客松演示版本：**所有 AI 回应均为内置虚拟数据**，无需 API Key、无需联网即可运行。
-
-## 本地运行
-
-**前置要求：** Node.js
-
-1. 安装依赖：
-   `npm install`
-2. 启动开发服务器：
-   `npm run dev`
-3. 打开 http://localhost:3000 即可使用（手机壳布局，可开浏览器手机模拟器体验）
-
-## 生产构建
-
-`npm run build` 后 `npm run start`（服务 http://localhost:3000）。
+打开 `http://localhost:3000`。`server.ts` 提供演示用 `/api/health`、`/api/chat`、`/api/generate-praise` 与安全关键词检查。构建：`pnpm lint && pnpm build`；界面变更前请阅读 [交互设计规范](交互设计规范.md)。

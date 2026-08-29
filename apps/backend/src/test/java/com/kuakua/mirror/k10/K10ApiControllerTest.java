@@ -3,6 +3,7 @@ package com.kuakua.mirror.k10;
 import com.kuakua.mirror.ai.infra.DashScopeService;
 import com.kuakua.mirror.device.infra.DeviceService;
 import com.kuakua.mirror.device.infra.FactoryProvisioningService;
+import com.kuakua.mirror.praise.PraiseMirrorPipelineService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,6 +24,9 @@ import java.util.Base64;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,6 +44,9 @@ class K10ApiControllerTest {
 
     @MockBean
     private DashScopeService dashScopeService;
+
+    @MockBean
+    private PraiseMirrorPipelineService praiseMirrorPipelineService;
 
     @Autowired
     private FactoryProvisioningService provisioningService;
@@ -66,10 +73,12 @@ class K10ApiControllerTest {
     @Test
     void praiseStreamsTextAudioAndCompletion() throws Exception {
         DeviceService.Activation activation = activate("praise");
-        when(dashScopeService.streamImagePraise(anyString())).thenReturn(Flux.just("你真棒"));
-        when(dashScopeService.synthesize("你真棒")).thenReturn(Mono.just(pcm16Wav()));
+        String praise = "我的选择真有眼光！";
+        when(praiseMirrorPipelineService.generatePraise(anyString(), isNull())).thenReturn(Mono.just(
+                PraiseMirrorPipelineService.PraiseResult.builder().praiseSentence(praise).build()));
+        when(dashScopeService.synthesize(praise)).thenReturn(Mono.just(pcm16Wav()));
 
-        MvcResult result = mockMvc.perform(post("/api/praise/stream")
+        MvcResult result = mockMvc.perform(post("/api/v1/praise/stream")
                         .header("X-Device-ID", activation.device().getDeviceId())
                         .header("Authorization", "Bearer " + activation.token())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -82,6 +91,9 @@ class K10ApiControllerTest {
                 .andExpect(content().string(containsString("\"type\" : \"text\"")))
                 .andExpect(content().string(containsString("\"type\" : \"audio\"")))
                 .andExpect(content().string(containsString("\"type\" : \"complete\"")));
+
+        verify(praiseMirrorPipelineService).generatePraise(anyString(), isNull());
+        verify(dashScopeService, never()).streamImagePraise(anyString());
     }
 
     @Test

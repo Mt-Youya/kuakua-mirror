@@ -65,12 +65,22 @@ public class DashScopeService {
     }
 
     public Flux<String> streamImagePraise(String imageDataUrl) {
+        return streamImageResponse(imageDataUrl, "请用温暖、具体且不超过十五个汉字的语气夸奖照片中的人。");
+    }
+
+    public Mono<String> generateImageResponse(String imageDataUrl, String prompt) {
+        return streamImageResponse(imageDataUrl, prompt)
+                .collectList()
+                .map(parts -> String.join("", parts));
+    }
+
+    private Flux<String> streamImageResponse(String imageDataUrl, String prompt) {
         return Flux.defer(() -> {
             MultiModalMessage message = MultiModalMessage.builder()
                     .role("user")
                     .content(List.of(
                             Map.of("image", imageDataUrl),
-                            Map.of("text", "请用温暖、具体且不超过十五个汉字的语气夸奖照片中的人。")
+                            Map.of("text", prompt)
                     ))
                     .build();
             MultiModalConversationParam param = MultiModalConversationParam.builder()

@@ -101,18 +101,30 @@ public class PraiseMirrorPipelineService {
     private JsonNode runP1Vision(String imageBase64) {
         try {
             String prompt = promptService.getP1VisualPrompt();
-            // TODO: 调用 DashScope 视觉模型
-            // 暂时返回空对象，实际需要调用 multimodal API
-            log.warn("P1 视觉标签提取暂未实现，返回空标签");
-            return objectMapper.createObjectNode()
-                .put("blurry", true)
-                .set("expression", objectMapper.createArrayNode().add("无法辨认"));
+            String response = dashScopeService.generateImageResponse(
+                    "data:image/jpeg;base64," + imageBase64, prompt).block();
+            if (response == null || response.isBlank()) {
+                throw new IllegalStateException("P1 视觉模型未返回标签");
+            }
+            return objectMapper.readTree(stripCodeFence(response));
         } catch (Exception e) {
             log.error("P1 视觉标签提取失败", e);
             return objectMapper.createObjectNode()
                 .put("blurry", true)
                 .set("expression", objectMapper.createArrayNode().add("无法辨认"));
         }
+    }
+
+    private String stripCodeFence(String response) {
+        String value = response.trim();
+        if (!value.startsWith("```")) {
+            return value;
+        }
+        int firstNewline = value.indexOf('\n');
+        int lastFence = value.lastIndexOf("```");
+        return firstNewline >= 0 && lastFence > firstNewline
+                ? value.substring(firstNewline + 1, lastFence).trim()
+                : value;
     }
 
     /**
