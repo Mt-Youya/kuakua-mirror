@@ -1,0 +1,12 @@
+{
+  "name": "@kuakua/api-docs",
+  "version": "0.0.1",
+  "private": true,
+  "files": [
+    "openapi.json"
+  ],
+  "scripts": {
+    "build": "node -e \"JSON.parse(require('node:fs').readFileSync('openapi.json', 'utf8'))\"",
+    "validate": "node -e \"JSON.parse(require('node:fs').readFileSync('openapi.json', 'utf8'))\""
+  }
+}

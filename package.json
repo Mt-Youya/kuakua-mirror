@@ -17,9 +17,6 @@
     "oxlint": "^1.80.0",
     "typescript": "^6.0.3"
   },
-  "pnpm": {
-    "overrides": {}
-  },
   "engines": {
     "node": ">=24",
     "pnpm": ">=11"

@@ -1,13 +1,14 @@
 import * as React from "react";
 
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "success" | "warning" | "destructive";
+  variant?: "default" | "secondary" | "success" | "warning" | "destructive";
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
   ({ className = "", variant = "default", ...props }, ref) => {
     const variantStyles = {
       default: "bg-primary text-primary-foreground",
+      secondary: "bg-gray-500 text-white",
       success: "bg-green-500 text-white",
       warning: "bg-yellow-500 text-white",
       destructive: "bg-red-500 text-white",

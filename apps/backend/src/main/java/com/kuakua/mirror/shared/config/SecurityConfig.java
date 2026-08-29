@@ -46,7 +46,7 @@ public class SecurityConfig {
                 objectMapper.writeValue(response.getOutputStream(), ApiResponse.error("设备Token无效"));
             }))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/health", "/api/version", "/api/v1/devices/activate").permitAll()
+                .requestMatchers("/api/health", "/api/version", "/api/v1/devices/activate", "/openapi.json").permitAll()
                 .requestMatchers("/api/conversations/**", "/api/monitor/**").denyAll()
                 .anyRequest().authenticated()
             )
