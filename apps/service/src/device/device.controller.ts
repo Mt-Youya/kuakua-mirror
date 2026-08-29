@@ -2,7 +2,7 @@ import { Controller, Post, Get, Patch, Body, Param } from '@nestjs/common';
 import { DeviceService } from './device.service';
 import { RegisterDeviceDto, UpdateDeviceDto } from './dto/device.dto';
 
-@Controller('api/devices')
+@Controller('devices')
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 

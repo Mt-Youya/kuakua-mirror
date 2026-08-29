@@ -146,7 +146,7 @@
         "responses": { "200": { "description": "时间倒序的分页历史" }, "401": { "$ref": "#/components/responses/Unauthorized" } }
       }
     },
-    "/api/praise/stream": {
+    "/api/v1/praise/stream": {
       "post": {
         "tags": ["百炼"],
         "summary": "图像夸夸 SSE",
@@ -156,7 +156,7 @@
         "responses": { "200": { "description": "text/event-stream，严格顺序：status → 全部 text → audio → complete；audio.url 指向 PCM 16-bit little-endian、单声道、16 kHz WAV。" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "411": { "$ref": "#/components/responses/ContentLengthRequired" }, "413": { "$ref": "#/components/responses/RequestTooLarge" }, "429": { "$ref": "#/components/responses/RateLimited" } }
       }
     },
-    "/api/chat/stream": {
+    "/api/v1/chat/stream": {
       "post": {
         "tags": ["百炼"],
         "summary": "语音聊天 SSE",
@@ -166,7 +166,7 @@
         "responses": { "200": { "description": "text/event-stream，严格顺序：status → asr_result → status → 全部 text → audio → complete；audio.url 指向 PCM 16-bit little-endian、单声道、16 kHz WAV。" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "411": { "$ref": "#/components/responses/ContentLengthRequired" }, "413": { "$ref": "#/components/responses/RequestTooLarge" }, "429": { "$ref": "#/components/responses/RateLimited" } }
       }
     },
-    "/api/tts": {
+    "/api/v1/tts": {
       "post": {
         "tags": ["百炼"],
         "summary": "文本转语音",

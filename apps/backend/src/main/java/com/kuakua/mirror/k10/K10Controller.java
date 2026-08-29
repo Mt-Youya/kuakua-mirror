@@ -49,7 +49,7 @@ public class K10Controller {
     private final LocalAudioStore audioStore;
     private final Map<String, ChatSession> sessions = new ConcurrentHashMap<>();
 
-    @PostMapping(value = "/api/praise/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/api/v1/praise/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<Map<String, Object>>> praise(
             @RequestHeader("X-Device-ID") String deviceId,
             @AuthenticationPrincipal Device device,
@@ -78,7 +78,7 @@ public class K10Controller {
         ).onErrorResume(exception -> Flux.just(event(Map.of("type", "error", "message", "服务繁忙"))));
     }
 
-    @PostMapping(value = "/api/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/api/v1/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<Map<String, Object>>> chat(
             @RequestHeader("X-Device-ID") String deviceId,
             @AuthenticationPrincipal Device device,
@@ -121,7 +121,7 @@ public class K10Controller {
         ).onErrorResume(exception -> Flux.just(event(Map.of("type", "error", "message", "服务繁忙"))));
     }
 
-    @PostMapping("/api/tts")
+    @PostMapping("/api/v1/tts")
     public Mono<ResponseEntity<K10Response<Map<String, Object>>>> tts(
             @RequestHeader("X-Device-ID") String deviceId,
             @AuthenticationPrincipal Device device,

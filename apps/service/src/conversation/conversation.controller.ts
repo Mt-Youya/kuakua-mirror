@@ -3,7 +3,7 @@ import { ConversationService } from './conversation.service';
 import { CreateConversationDto, SendMessageDto } from './dto/conversation.dto';
 import { MessageRole } from './entities/message.entity';
 
-@Controller('api/conversations')
+@Controller('conversations')
 export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 

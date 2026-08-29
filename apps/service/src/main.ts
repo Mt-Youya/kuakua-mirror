@@ -24,6 +24,11 @@ async function bootstrap() {
   // 使用 WebSocket 适配器
   app.useWebSocketAdapter(new WsAdapter(app));
 
+  // 设置全局 API 版本前缀
+  app.setGlobalPrefix('api/v1', {
+    exclude: ['api/health', 'api/version'],
+  });
+
   const port = process.env.PORT || 5090;
   await app.listen(port);
 
