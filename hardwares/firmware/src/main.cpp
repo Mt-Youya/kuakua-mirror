@@ -26,6 +26,9 @@ volatile unsigned long buttonADownAt = 0;
 volatile bool longPressHandled = false;
 volatile bool photoRequested = false;
 volatile bool voiceRequested = false;
+volatile bool buttonBDown = false;
+volatile unsigned long buttonBDownAt = 0;
+volatile bool hugRequested = false;
 volatile bool reconnectRequested = false;
 
 void logEvent(const char* event) {
@@ -47,8 +50,25 @@ void onButtonAReleased() {
 }
 
 void onButtonBPressed() {
-    logEvent("button=B action=reconnect-requested");
-    reconnectRequested = true;
+    logEvent("button=B action=pressed");
+    buttonBDown = true;
+    buttonBDownAt = millis();
+}
+
+void onButtonBReleased() {
+    const unsigned long heldMs = millis() - buttonBDownAt;
+    const bool isLongPress = heldMs >= LONG_PRESS_MS;
+    Serial.printf("[K10] %lums button=B action=released held_ms=%lu long=%d\n", millis(), heldMs, isLongPress);
+
+    if (isLongPress) {
+        reconnectRequested = true;
+        logEvent("button=B action=reconnect-requested");
+    } else {
+        hugRequested = true;
+        logEvent("button=B action=short-press-queued");
+    }
+
+    buttonBDown = false;
 }
 
 bool connectWifi() {
@@ -188,6 +208,7 @@ void setup() {
     k10.buttonA->setPressedCallback(onButtonAPressed);
     k10.buttonA->setUnPressedCallback(onButtonAReleased);
     k10.buttonB->setPressedCallback(onButtonBPressed);
+    k10.buttonB->setUnPressedCallback(onButtonBReleased);
 
     cameraReady = camera.begin();
     Serial.printf("[K10] %lums camera result=%s\n", millis(), cameraReady ? "ready" : "failed");
@@ -205,6 +226,19 @@ void setup() {
 
 void loop() {
     led.update();
+    if (screen.hugIsActive()) {
+        if (!screen.hugTick()) {
+            logEvent("hug action=complete");
+            returnToIdle();
+        }
+        delay(10);
+        return;
+    }
+    if (hugRequested) {
+        hugRequested = false;
+        screen.hugStart();
+        logEvent("hug action=start");
+    }
     if (buttonADown && !longPressHandled && millis() - buttonADownAt >= LONG_PRESS_MS) {
         longPressHandled = true;
         voiceRequested = true;

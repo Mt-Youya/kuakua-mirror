@@ -13,6 +13,7 @@
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
+#include <mbedtls/base64.h>
 #include "config.h"
 #include "server_cert.h"
 
@@ -56,169 +57,48 @@ public:
                      const String& jsonBody,
                      const String& deviceId,
                      const String& deviceToken) {
-        
-        _connected = false;
-        _tlsConnected = false;
-        
-        // 解析 URL → host + path + port
-        String host, path;
-        int port = 443;
-        bool useHttps = true;
-        
-        if (url.startsWith("https://")) {
-            host = url.substring(8);
-        } else if (url.startsWith("http://")) {
-            host = url.substring(7);
-            useHttps = false;
-            port = 80;
-        } else {
-            host = url;
-        }
-        
-        int slashPos = host.indexOf('/');
-        if (slashPos > 0) {
-            path = host.substring(slashPos);
-            host = host.substring(0, slashPos);
-        } else {
-            path = "/";
-        }
-        
-        // 检查 host:port 格式
-        int colonPos = host.indexOf(':');
-        if (colonPos > 0) {
-            port = host.substring(colonPos + 1).toInt();
-            host = host.substring(0, colonPos);
-        }
-        
-        Serial.printf("[TLS] host=%s port=%d path=%s https=%d\n", host.c_str(), port, path.c_str(), useHttps);
-        
-        // 1. TLS 连接
-        if (useHttps) {
-            _tls.setCACert(K10_SERVER_CA);
-        }
-        
-        Serial.println("[TLS] 连接中...");
-        if (!_tls.connect(host.c_str(), port)) {
-            Serial.println("[TLS] ❌ 连接失败");
-            _httpCode = -1;
-            return false;
-        }
-        Serial.println("[TLS] ✅ 连接成功");
-        _tlsConnected = true;
-        
-        // 2. 构造 HTTP 请求头
-        String headers = "POST " + path + " HTTP/1.1\r\n";
-        headers += "Host: " + host + "\r\n";
-        headers += "Content-Type: application/json\r\n";
-        headers += "Accept: text/event-stream\r\n";
-        headers += "Cache-Control: no-cache\r\n";
-        headers += "Accept-Encoding: identity\r\n";
-        headers += "X-Device-ID: " + deviceId + "\r\n";
-        if (deviceToken.length() > 0) {
-            headers += "Authorization: Bearer " + deviceToken + "\r\n";
-        }
-        Serial.printf("[HTTP] auth device_id_bytes=%u token_bytes=%u token_fingerprint=%08lx\n", deviceId.length(), deviceToken.length(), tokenFingerprint(deviceToken));
-        headers += "Content-Length: " + String(jsonBody.length()) + "\r\n";
-        headers += "Connection: keep-alive\r\n";
-        headers += "\r\n";
-        
-        // 3. 发送 headers
-        size_t headerLen = headers.length();
-        size_t written = _tls.write((const uint8_t*)headers.c_str(), headerLen);
-        Serial.printf("[HTTP] Headers 发送 %d/%d\n", (int)written, (int)headerLen);
-        if (written != headerLen) {
-            Serial.println("[HTTP] ❌ Headers 发送不完整");
-            _httpCode = -3;
-            _tls.stop();
-            _tlsConnected = false;
-            return false;
-        }
-        
-        // 4. 分块发送 body（每次 4KB）
-        size_t bodyLen = jsonBody.length();
-        const char* bodyPtr = jsonBody.c_str();
+        if (!beginPost(url, jsonBody.length(), deviceId, deviceToken)) return false;
         size_t totalSent = 0;
-        size_t chunkSize = 4096;
-        
-        Serial.printf("[HTTP] body 分块发送 %d 字节, 每块 %d...\n", (int)bodyLen, (int)chunkSize);
-        while (totalSent < bodyLen) {
-            size_t toSend = (bodyLen - totalSent < chunkSize) ? (bodyLen - totalSent) : chunkSize;
-            size_t sent = _tls.write((const uint8_t*)(bodyPtr + totalSent), toSend);
-            if (sent == 0) {
-                Serial.printf("[HTTP] ❌ body 发送失败 at %d/%d\n", (int)totalSent, (int)bodyLen);
-                _httpCode = -3;
-                _tls.stop();
-                _tlsConnected = false;
+        Serial.printf("[HTTP] body 分块发送 %u 字节, 每块 4096...\n", jsonBody.length());
+        if (!sendBodyPart(reinterpret_cast<const uint8_t*>(jsonBody.c_str()), jsonBody.length(), totalSent, jsonBody.length())) return false;
+        Serial.printf("[HTTP] body 发送完成 %u/%u\n", totalSent, jsonBody.length());
+        return finishPost();
+    }
+
+    bool connectPostWav(const String& url, const uint8_t* wav, size_t wavSize,
+                        const String& deviceId, const String& deviceToken,
+                        const String& sessionId, unsigned long timestamp) {
+        String prefix = "{\"device_id\":\"" + deviceId + "\",\"audio_base64\":\"";
+        String suffix = "\",\"session_id\":\"" + sessionId + "\",\"timestamp\":" + String(timestamp) + "}";
+        const size_t encodedSize = ((wavSize + 2) / 3) * 4;
+        const size_t bodySize = prefix.length() + encodedSize + suffix.length();
+        if (!beginPost(url, bodySize, deviceId, deviceToken)) return false;
+
+        size_t totalSent = 0;
+        Serial.printf("[HTTP] body 流式发送 %u 字节, wav_bytes=%u...\n", bodySize, wavSize);
+        if (!sendBodyPart(reinterpret_cast<const uint8_t*>(prefix.c_str()), prefix.length(), totalSent, bodySize)) return false;
+
+        // ponytail: K10 interactions are synchronous; make this per-client only if concurrent uploads are introduced.
+        static char encoded[4097];
+        for (size_t offset = 0; offset < wavSize; ) {
+            const size_t sourceSize = min(static_cast<size_t>(3072), wavSize - offset);
+            size_t written = 0;
+            if (mbedtls_base64_encode(reinterpret_cast<unsigned char*>(encoded), sizeof(encoded), &written, wav + offset, sourceSize) != 0) {
+                Serial.println("[HTTP] ❌ WAV Base64 流式编码失败");
+                disconnect();
                 return false;
             }
-            totalSent += sent;
-            // 每 32KB 打印一次进度
-            if (totalSent % 32768 < chunkSize) {
-                Serial.printf("[HTTP] 已发 %d/%d\n", (int)totalSent, (int)bodyLen);
-            }
-            // 小 delay 让 TLS 缓冲区刷新
-            delay(2);
+            if (!sendBodyPart(reinterpret_cast<const uint8_t*>(encoded), written, totalSent, bodySize)) return false;
+            offset += sourceSize;
         }
-        Serial.printf("[HTTP] body 发送完成 %d/%d\n", (int)totalSent, (int)bodyLen);
-        
-        // 5. 读取 HTTP 响应状态行
-        // 等待数据到达
-        unsigned long waitStart = millis();
-        while (_tls.available() == 0) {
-            if (millis() - waitStart > 15000) {
-                Serial.println("[HTTP] ❌ 等待响应超时");
-                _httpCode = -11;
-                _tls.stop();
-                _tlsConnected = false;
-                return false;
-            }
-            delay(10);
-        }
-        
-        // 读状态行: "HTTP/1.1 200 OK\r\n"
-        String statusLine = _tls.readStringUntil('\n');
-        statusLine.trim();
-        Serial.printf("[HTTP] 响应: %s\n", statusLine.c_str());
-        
-        // 解析状态码
-        int codeStart = statusLine.indexOf(' ');
-        if (codeStart < 0) {
-            Serial.println("[HTTP] ❌ 无法解析状态行");
-            _httpCode = -1;
-            _tls.stop();
-            _tlsConnected = false;
+        if (!sendBodyPart(reinterpret_cast<const uint8_t*>(suffix.c_str()), suffix.length(), totalSent, bodySize)) return false;
+        Serial.printf("[HTTP] body 发送完成 %u/%u\n", totalSent, bodySize);
+        if (totalSent != bodySize) {
+            Serial.println("[HTTP] ❌ body 长度不一致");
+            disconnect();
             return false;
         }
-        _httpCode = statusLine.substring(codeStart + 1, codeStart + 4).toInt();
-        Serial.printf("[HTTP] 状态码: %d\n", _httpCode);
-        
-        // 6. 读取并跳过剩余 headers（直到空行）
-        while (_tls.connected()) {
-            String headerLine = _tls.readStringUntil('\n');
-            headerLine.trim();
-            if (headerLine.length() == 0) {
-                break;  // 空行 = headers 结束
-            }
-            // 打印部分 header 用于调试
-            if (headerLine.length() < 100) {
-                Serial.printf("[HTTP-HDR] %s\n", headerLine.c_str());
-            }
-        }
-        
-        // 7. 检查状态码
-        if (_httpCode == HTTP_CODE_OK || _httpCode == HTTP_CODE_CREATED) {
-            _connected = true;
-            Serial.println("[SSE] ✅ SSE 流已建立");
-            return true;
-        }
-        
-        // 非 200 — 读取错误 body
-        String errBody = _tls.readString();
-        Serial.printf("[HTTP] ❌ 错误响应 body: %s\n", errBody.substring(0, 500).c_str());
-        _tls.stop();
-        _tlsConnected = false;
-        _connected = false;
-        return false;
+        return finishPost();
     }
 
     // 断开连接
@@ -316,6 +196,94 @@ private:
     int _httpCode;
     bool _connected;
     bool _tlsConnected;
+
+    bool beginPost(const String& url, size_t bodySize, const String& deviceId, const String& deviceToken) {
+        _connected = false;
+        _tlsConnected = false;
+        String host = url.startsWith("https://") ? url.substring(8) : url;
+        int port = url.startsWith("https://") ? 443 : 80;
+        int slashPos = host.indexOf('/');
+        String path = slashPos > 0 ? host.substring(slashPos) : "/";
+        if (slashPos > 0) host = host.substring(0, slashPos);
+        int colonPos = host.indexOf(':');
+        if (colonPos > 0) {
+            port = host.substring(colonPos + 1).toInt();
+            host = host.substring(0, colonPos);
+        }
+        Serial.printf("[TLS] host=%s port=%d path=%s https=1\n", host.c_str(), port, path.c_str());
+        _tls.setCACert(K10_SERVER_CA);
+        Serial.println("[TLS] 连接中...");
+        if (!_tls.connect(host.c_str(), port)) {
+            Serial.println("[TLS] ❌ 连接失败");
+            _httpCode = -1;
+            return false;
+        }
+        Serial.println("[TLS] ✅ 连接成功");
+        _tlsConnected = true;
+        String headers = "POST " + path + " HTTP/1.1\r\nHost: " + host + "\r\nContent-Type: application/json\r\nAccept: text/event-stream\r\nCache-Control: no-cache\r\nAccept-Encoding: identity\r\nX-Device-ID: " + deviceId + "\r\nAuthorization: Bearer " + deviceToken + "\r\nContent-Length: " + String(bodySize) + "\r\nConnection: keep-alive\r\n\r\n";
+        Serial.printf("[HTTP] auth device_id_bytes=%u token_bytes=%u token_fingerprint=%08lx\n", deviceId.length(), deviceToken.length(), tokenFingerprint(deviceToken));
+        size_t written = _tls.write(reinterpret_cast<const uint8_t*>(headers.c_str()), headers.length());
+        Serial.printf("[HTTP] Headers 发送 %u/%u\n", written, headers.length());
+        if (written == headers.length()) return true;
+        Serial.println("[HTTP] ❌ Headers 发送不完整");
+        disconnect();
+        return false;
+    }
+
+    bool sendBodyPart(const uint8_t* data, size_t size, size_t& totalSent, size_t bodySize) {
+        for (size_t offset = 0; offset < size; ) {
+            const size_t partSize = min(static_cast<size_t>(4096), size - offset);
+            const size_t written = _tls.write(data + offset, partSize);
+            if (!written) {
+                Serial.printf("[HTTP] ❌ body 发送失败 at %u/%u\n", totalSent, bodySize);
+                disconnect();
+                return false;
+            }
+            offset += written;
+            totalSent += written;
+            if (totalSent % 32768 < partSize) Serial.printf("[HTTP] 已发 %u/%u\n", totalSent, bodySize);
+            delay(2);
+        }
+        return true;
+    }
+
+    bool finishPost() {
+        unsigned long waitStart = millis();
+        while (_tls.available() == 0) {
+            if (millis() - waitStart > 15000) {
+                Serial.println("[HTTP] ❌ 等待响应超时");
+                disconnect();
+                return false;
+            }
+            delay(10);
+        }
+        String statusLine = _tls.readStringUntil('\n');
+        statusLine.trim();
+        Serial.printf("[HTTP] 响应: %s\n", statusLine.c_str());
+        int codeStart = statusLine.indexOf(' ');
+        if (codeStart < 0) {
+            Serial.println("[HTTP] ❌ 无法解析状态行");
+            disconnect();
+            return false;
+        }
+        _httpCode = statusLine.substring(codeStart + 1, codeStart + 4).toInt();
+        Serial.printf("[HTTP] 状态码: %d\n", _httpCode);
+        while (_tls.connected()) {
+            String headerLine = _tls.readStringUntil('\n');
+            headerLine.trim();
+            if (!headerLine.length()) break;
+            if (headerLine.length() < 100) Serial.printf("[HTTP-HDR] %s\n", headerLine.c_str());
+        }
+        if (_httpCode == HTTP_CODE_OK || _httpCode == HTTP_CODE_CREATED) {
+            _connected = true;
+            Serial.println("[SSE] ✅ SSE 流已建立");
+            return true;
+        }
+        String errBody = _tls.readString();
+        Serial.printf("[HTTP] ❌ 错误响应 body: %s\n", errBody.substring(0, 500).c_str());
+        disconnect();
+        return false;
+    }
 
     // 解析一条 data 的 JSON，填充 event
     bool parseEventData(const String& data, SseEvent& event) {

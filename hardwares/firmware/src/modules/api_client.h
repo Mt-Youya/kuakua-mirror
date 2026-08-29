@@ -3,7 +3,6 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
-#include <base64.h>
 
 #include "../config.h"
 #include "../server_cert.h"
@@ -27,11 +26,15 @@ public:
     }
 
     StreamResult chat(const uint8_t* wav, size_t wavSize, const String& sessionId) {
-        String audioBase64 = base64::encode(wav, wavSize);
-        String body = "{\"device_id\":\"" + _deviceId + "\",\"audio_base64\":\"" + audioBase64
-                + "\",\"session_id\":\"" + sessionId + "\",\"timestamp\":" + String(millis()) + "}";
-        Serial.printf("[K10] api action=chat wav_bytes=%u audio_base64_bytes=%u request_bytes=%u token_bytes=%u\n", wavSize, audioBase64.length(), body.length(), _token.length());
-        return stream(API_CHAT_STREAM, body);
+        StreamResult result;
+        const size_t audioBase64Size = ((wavSize + 2) / 3) * 4;
+        Serial.printf("[K10] api action=chat wav_bytes=%u audio_base64_bytes=%u token_bytes=%u\n", wavSize, audioBase64Size, _token.length());
+        SseClient client;
+        if (!client.connectPostWav(String(SERVER_HOST) + API_CHAT_STREAM, wav, wavSize, _deviceId, _token, sessionId, millis())) {
+            Serial.println("[K10] api action=stream result=connect-failed");
+            return result;
+        }
+        return readStream(client);
     }
 
     String synthesize(const String& text) {
@@ -72,6 +75,11 @@ private:
             return result;
         }
 
+        return readStream(client);
+    }
+
+    StreamResult readStream(SseClient& client) {
+        StreamResult result;
         unsigned long lastData = millis();
         while (millis() - lastData < TOTAL_STREAM_TIMEOUT_MS) {
             SseEvent event;
