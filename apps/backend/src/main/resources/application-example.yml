@@ -1,47 +1,38 @@
-spring:
-  application:
-    name: kuakua-mirror
-  profiles:
-    active: dev
+# application.yml 配置示例
 
-# 开发环境配置示例
----
-spring:
-  config:
-    activate:
-      on-profile: dev
+# 大模型 API 配置
+llm:
+  api:
+    # 阿里云百炼平台（兼容 OpenAI API）
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    # API Key（建议通过环境变量注入）
+    key: ${DASHSCOPE_API_KEY:sk-your-api-key-here}
 
+# 服务器配置
 server:
-  port: ${PORT:8080}
+  port: 8080
+  servlet:
+    context-path: /
 
+# 日志配置
 logging:
   level:
-    root: INFO
-    com.kuakua.mirror: DEBUG
+    com.kuakua: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
-dashscope:
-  api-key: ${DASHSCOPE_API_KEY:}
-  tts-voice: ${DASHSCOPE_TTS_VOICE:}
-
-# 生产环境配置示例
----
+# HTTP 客户端配置
 spring:
-  config:
-    activate:
-      on-profile: prod
+  http:
+    client:
+      timeout:
+        connect: 30s
+        read: 60s
 
-server:
-  port: ${PORT:8080}
-
-logging:
-  level:
-    root: WARN
-    com.kuakua.mirror: INFO
-  file:
-    name: /app/logs/application.log
-    max-size: 100MB
-    max-history: 30
-
-dashscope:
-  api-key: ${DASHSCOPE_API_KEY}
-  tts-voice: ${DASHSCOPE_TTS_VOICE}
+# Jackson 配置（JSON 序列化）
+spring:
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      indent_output: true
