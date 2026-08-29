@@ -28,17 +28,21 @@ public class TestController {
     @GetMapping("/api/test/tts")
     public Mono<Map<String, Object>> testTts(@RequestParam(defaultValue = "今天天气真好") String text) {
         return dashScopeService.synthesize(text)
-                .map(audio -> Map.of(
-                        "success", true,
-                        "message", "TTS 调用成功，百炼 API 工作正常",
-                        "audioSize", audio.length,
-                        "text", text
-                ))
-                .onErrorResume(e -> Mono.just(Map.of(
-                        "success", false,
-                        "error", e.getMessage(),
-                        "hint", "检查 DASHSCOPE_API_KEY 和 DASHSCOPE_TTS_VOICE 环境变量"
-                )));
+                .map(audio -> {
+                    Map<String, Object> result = new java.util.HashMap<>();
+                    result.put("success", true);
+                    result.put("message", "TTS 调用成功，百炼 API 工作正常");
+                    result.put("audioSize", audio.length);
+                    result.put("text", text);
+                    return result;
+                })
+                .onErrorResume(e -> {
+                    Map<String, Object> error = new java.util.HashMap<>();
+                    error.put("success", false);
+                    error.put("error", e.getMessage());
+                    error.put("hint", "检查 DASHSCOPE_API_KEY 和 DASHSCOPE_TTS_VOICE 环境变量");
+                    return Mono.just(error);
+                });
     }
 
     /**
@@ -48,14 +52,18 @@ public class TestController {
     @GetMapping("/api/test/chat")
     public Mono<Map<String, Object>> testChat(@RequestParam(defaultValue = "用一句话介绍你自己") String message) {
         return dashScopeService.generateResponse(message, "你是一个友好的 AI 助手")
-                .map(response -> Map.of(
-                        "success", true,
-                        "message", "文本模型调用成功",
-                        "response", response
-                ))
-                .onErrorResume(e -> Mono.just(Map.of(
-                        "success", false,
-                        "error", e.getMessage()
-                )));
+                .map(response -> {
+                    Map<String, Object> result = new java.util.HashMap<>();
+                    result.put("success", true);
+                    result.put("message", "文本模型调用成功");
+                    result.put("response", response);
+                    return result;
+                })
+                .onErrorResume(e -> {
+                    Map<String, Object> error = new java.util.HashMap<>();
+                    error.put("success", false);
+                    error.put("error", e.getMessage());
+                    return Mono.just(error);
+                });
     }
 }
