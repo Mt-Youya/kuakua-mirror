@@ -138,7 +138,7 @@ public class K10Controller {
                         .body(K10Response.error(500, "语音合成失败"))));
     }
 
-    @GetMapping("/audio/{filename:.+}")
+    @GetMapping("/api/v1/audio/{filename:.+}")
     public ResponseEntity<FileSystemResource> audio(@PathVariable String filename, @AuthenticationPrincipal Device device) {
         if (audioStore.ownedByAnotherDevice(device.getDeviceId(), filename)) {
             throw new BusinessException("UNAUTHORIZED", "设备无权访问该音频");
@@ -162,7 +162,7 @@ public class K10Controller {
                 .map(audio -> storeAudio(deviceId, audio))
                 .map(audio -> event(Map.of(
                         "type", "audio",
-                        "url", "/audio/" + audio.filename(),
+                        "url", "/api/v1/audio/" + audio.filename(),
                         "duration", audio.duration()
                 )))
                 .flux();
@@ -181,7 +181,7 @@ public class K10Controller {
 
     private Map<String, Object> audioData(StoredAudio audio) {
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("audio_url", "/audio/" + audio.filename());
+        data.put("audio_url", "/api/v1/audio/" + audio.filename());
         data.put("duration", audio.duration());
         data.put("format", "wav");
         data.put("sample_rate", 16000);
