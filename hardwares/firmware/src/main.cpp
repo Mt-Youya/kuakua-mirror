@@ -5,10 +5,15 @@
 #include "unihiker_k10.h"
 #include "config.h"
 #include "display_stream.h"
+#include "hug_player.h"
+#include "hug_voice.h"
 #include "led_effect.h"
 #include "modules/api_client.h"
 #include "modules/credentials.h"
 #include "modules/media.h"
+#ifdef AUDIO_DUMP
+#include "hug_audio_dump.h"
+#endif
 
 UNIHIKER_K10 k10;
 LedEffectManager led(&k10);
@@ -17,6 +22,8 @@ TypewriterAnim typer;
 CredentialStore credentials;
 CameraCapture camera;
 VoiceRecorder recorder(k10);
+HugPlayer hugPlayer;
+HugVoice hugVoice;
 
 bool wifiConnected = false;
 bool cameraReady = false;
@@ -199,7 +206,7 @@ void setup() {
     logEvent("boot action=start");
     Wire.begin(47, 48);
     k10.begin();
-    k10.initScreen(2);
+    k10.initScreen(0);  // 0 = 竖屏 0°（相对原 dir=2 为 180° 上下颠倒，纯旋转非镜像）
     k10.creatCanvas();
     k10.setScreenBackground(COL_BG);
     screen.begin();
@@ -214,6 +221,7 @@ void setup() {
     Serial.printf("[K10] %lums camera result=%s\n", millis(), cameraReady ? "ready" : "failed");
     recorder.begin();
     logEvent("audio result=ready");
+    hugVoice.begin();
     connectWifi();
     if (wifiConnected) {
         bool credentialReady = credentials.begin();
@@ -226,17 +234,34 @@ void setup() {
 
 void loop() {
     led.update();
-    if (screen.hugIsActive()) {
-        if (!screen.hugTick()) {
+#ifdef AUDIO_DUMP
+    // 临时导出模式:PC 端发送 "GO" → 设备用自身凭证合成 8 句并经串口回传
+    if (Serial.available()) {
+        String cmd = Serial.readString();
+        cmd.trim();
+        if (cmd.startsWith("GO") && onlineAndProvisioned()) {
+            K10ApiClient api(credentials.deviceId(), credentials.token());
+            dumpAllLines(api, credentials);
+        }
+    }
+#endif
+    if (hugPlayer.active()) {
+        int entered = hugPlayer.takePhaseEntered();
+        if (entered == HP_PHASE_HOLD) hugVoice.startSpeaking();  // 文字淡入瞬间开嗓
+        if (hugPlayer.tick()) {   // 返回 true = 动画结束
+            hugVoice.stop();
             logEvent("hug action=complete");
             returnToIdle();
         }
-        delay(10);
+        hugVoice.update();
+        delay(1);
         return;
     }
     if (hugRequested) {
         hugRequested = false;
-        screen.hugStart();
+        led.setState(ST_HUG);
+        hugPlayer.start();
+        hugVoice.prepare(hugPlayer.currentLineIndex());  // 预解析同一句(GBK),淡入瞬间零延迟开嗓
         logEvent("hug action=start");
     }
     if (buttonADown && !longPressHandled && millis() - buttonADownAt >= LONG_PRESS_MS) {

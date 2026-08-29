@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1300" viewBox="0 0 2000 1300" font-family="'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif">
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1A1D21"/>
+    </marker>
+    <g id="gnd">
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#1A1D21" stroke-width="1.7"/>
+      <line x1="-9" y1="10" x2="9" y2="10" stroke="#1A1D21" stroke-width="1.7"/>
+      <line x1="-5.5" y1="14.5" x2="5.5" y2="14.5" stroke="#1A1D21" stroke-width="1.7"/>
+      <line x1="-2.5" y1="19" x2="2.5" y2="19" stroke="#1A1D21" stroke-width="1.7"/>
+    </g>
+  </defs>
+
+  <!-- sheet -->
+  <rect width="2000" height="1300" fill="#FFFFFF"/>
+  <rect x="24" y="24" width="1952" height="1252" fill="none" stroke="#1A1D21" stroke-width="2.5"/>
+
+  <!-- sheet title -->
+  <text x="60" y="78" font-size="30" font-weight="700" fill="#1A1D21">夸夸镜 KuaKua Mirror —— 硬件系统原理图（系统级连接）</text>
+  <text x="60" y="108" font-size="15" fill="#6B7075">平台：DFRobot 行空板 K10（UNIHIKER K10 · ESP32-S3）· 依据固件 v1.0.0 源码实测绘制 · 网络标号 = GPIO 号</text>
+
+  <!-- ==================== U1 ESP32-S3 ==================== -->
+  <rect x="770" y="170" width="460" height="770" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2.2" rx="8"/>
+  <text x="1000" y="226" text-anchor="middle" font-size="22" font-weight="700" fill="#1A1D21">U1 · ESP32-S3-WROOM-1（N16R8）</text>
+  <text x="1000" y="254" text-anchor="middle" font-size="14" fill="#6B7075">双核 Xtensa LX7 @240MHz · Wi-Fi 802.11 b/g/n · BLE 5</text>
+  <text x="1000" y="278" text-anchor="middle" font-size="14" fill="#6B7075">16MB Flash · 8MB OPI PSRAM（帧缓冲 / 媒资缓存）</text>
+
+  <!-- left stubs -->
+  <g stroke="#1A1D21" stroke-width="1.7">
+    <line x1="740" y1="330" x2="770" y2="330"/>
+    <line x1="740" y1="370" x2="770" y2="370"/>
+    <line x1="740" y1="410" x2="770" y2="410"/>
+    <line x1="740" y1="450" x2="770" y2="450"/>
+    <line x1="740" y1="505" x2="770" y2="505"/>
+    <line x1="740" y1="585" x2="770" y2="585"/>
+    <line x1="740" y1="625" x2="770" y2="625"/>
+    <line x1="740" y1="710" x2="770" y2="710"/>
+    <line x1="740" y1="760" x2="770" y2="760"/>
+    <line x1="740" y1="845" x2="770" y2="845"/>
+    <line x1="740" y1="890" x2="770" y2="890"/>
+  </g>
+  <!-- left pin names inside U1 -->
+  <g font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">
+    <text x="782" y="334">GPIO7 · XCLK</text>
+    <text x="782" y="374">GPIO17 · PCLK</text>
+    <text x="782" y="414">GPIO4 · VSYNC</text>
+    <text x="782" y="454">GPIO5 · HREF</text>
+    <text x="782" y="509">GPIO8/10/11/9/18/16/15/6 · D[7:0]</text>
+    <text x="782" y="589">GPIO47 · I2C0_SDA</text>
+    <text x="782" y="629">GPIO48 · I2C0_SCL</text>
+    <text x="782" y="714">BTN_A（板载 IO 扩展）</text>
+    <text x="782" y="764">BTN_B（板载 IO 扩展）</text>
+    <text x="782" y="849">GPIO19 · USB_D-</text>
+    <text x="782" y="894">GPIO20 · USB_D+</text>
+  </g>
+
+  <!-- right stubs -->
+  <g stroke="#1A1D21" stroke-width="1.7">
+    <line x1="1230" y1="330" x2="1260" y2="330"/>
+    <line x1="1230" y1="370" x2="1260" y2="370"/>
+    <line x1="1230" y1="410" x2="1260" y2="410"/>
+    <line x1="1230" y1="450" x2="1260" y2="450"/>
+    <line x1="1230" y1="560" x2="1260" y2="560"/>
+    <line x1="1230" y1="600" x2="1260" y2="600"/>
+    <line x1="1230" y1="640" x2="1260" y2="640"/>
+    <line x1="1230" y1="680" x2="1260" y2="680"/>
+    <line x1="1230" y1="720" x2="1260" y2="720"/>
+    <line x1="1230" y1="830" x2="1260" y2="830"/>
+  </g>
+  <!-- right pin names inside U1 (right aligned) -->
+  <g font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21" text-anchor="end">
+    <text x="1218" y="334">GPIO21 · SPI_MOSI</text>
+    <text x="1218" y="374">GPIO12 · SPI_SCLK</text>
+    <text x="1218" y="414">GPIO14 · TFT_CS</text>
+    <text x="1218" y="454">GPIO13 · TFT_DC</text>
+    <text x="1218" y="564">GPIO3 · I2S0_MCLK</text>
+    <text x="1218" y="604">GPIO0 · I2S0_BCLK</text>
+    <text x="1218" y="644">GPIO38 · I2S0_LRCK</text>
+    <text x="1218" y="684">GPIO39 · I2S0_DIN</text>
+    <text x="1218" y="724">GPIO45 · I2S0_DOUT</text>
+    <text x="1218" y="834">GPIO46 · LED_DATA</text>
+  </g>
+
+  <!-- ==================== CAM1 (left) ==================== -->
+  <rect x="120" y="280" width="350" height="380" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2" rx="6"/>
+  <text x="140" y="316" font-size="17" font-weight="700" fill="#1A1D21">CAM1 · 摄像头模组（200 万像素）</text>
+  <text x="140" y="340" font-size="13" fill="#6B7075">DVP 8bit 并口 · RGB565 QVGA · XCLK 10MHz</text>
+  <text x="140" y="362" font-size="13" fill="#6B7075">帧缓冲位于 PSRAM · JPEG 质量 12</text>
+  <g font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21" text-anchor="end">
+    <text x="452" y="334">XCLK</text>
+    <text x="452" y="374">PCLK</text>
+    <text x="452" y="414">VSYNC</text>
+    <text x="452" y="454">HREF</text>
+    <text x="452" y="509">D[7:0]</text>
+    <text x="452" y="589">SIOD</text>
+    <text x="452" y="629">SIOC</text>
+  </g>
+  <text x="140" y="412" font-size="13" fill="#6B7075">SCCB 控制总线复用 I2C0</text>
+
+  <!-- cam wires -->
+  <g stroke="#1A1D21" stroke-width="1.7" fill="none">
+    <line x1="470" y1="330" x2="740" y2="330"/>
+    <line x1="470" y1="370" x2="740" y2="370"/>
+    <line x1="470" y1="410" x2="740" y2="410"/>
+    <line x1="470" y1="450" x2="740" y2="450"/>
+    <line x1="470" y1="585" x2="740" y2="585"/>
+    <line x1="470" y1="625" x2="740" y2="625"/>
+  </g>
+  <!-- camera data bus -->
+  <line x1="470" y1="505" x2="740" y2="505" stroke="#1A1D21" stroke-width="3.4"/>
+  <line x1="596" y1="516" x2="618" y2="494" stroke="#1A1D21" stroke-width="2"/>
+  <text x="622" y="497" font-size="13" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">8</text>
+  <text x="530" y="493" text-anchor="middle" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">CAM_D[7:0]</text>
+  <!-- i2c net labels -->
+  <text x="600" y="575" text-anchor="middle" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">I2C0_SDA</text>
+  <text x="600" y="615" text-anchor="middle" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">I2C0_SCL</text>
+  <!-- camera pin map note -->
+  <text x="120" y="688" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#6B7075">D0=8 D1=10 D2=11 D3=9 D4=18 D5=16 D6=15 D7=6</text>
+  <text x="120" y="708" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#6B7075">XCLK=7 PCLK=17 VSYNC=4 HREF=5</text>
+
+  <!-- ==================== SW1 / SW2 (left) ==================== -->
+  <rect x="120" y="724" width="210" height="58" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2" rx="6"/>
+  <text x="138" y="749" font-size="15" font-weight="700" fill="#1A1D21">SW1 · 按键 A</text>
+  <text x="138" y="770" font-size="12.5" fill="#6B7075">板载 P5 · 短按拍照 / 长按对话</text>
+  <path d="M 330 753 h 30 l 24 -12" stroke="#1A1D21" stroke-width="1.8" fill="none"/>
+  <circle cx="360" cy="753" r="3" fill="#1A1D21"/>
+  <circle cx="396" cy="753" r="3" fill="none" stroke="#1A1D21" stroke-width="1.8"/>
+  <path d="M 396 753 h 324 v -43 h 20" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <text x="560" y="742" text-anchor="middle" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">BTN_A</text>
+  <use href="#gnd" x="225" y="782"/>
+
+  <rect x="120" y="830" width="210" height="58" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2" rx="6"/>
+  <text x="138" y="855" font-size="15" font-weight="700" fill="#1A1D21">SW2 · 按键 B</text>
+  <text x="138" y="876" font-size="12.5" fill="#6B7075">板载 P11 · 短按抱抱 / 长按重连</text>
+  <path d="M 330 859 h 30 l 24 -12" stroke="#1A1D21" stroke-width="1.8" fill="none"/>
+  <circle cx="360" cy="859" r="3" fill="#1A1D21"/>
+  <circle cx="396" cy="859" r="3" fill="none" stroke="#1A1D21" stroke-width="1.8"/>
+  <path d="M 396 859 h 304 v -99 h 40" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <text x="560" y="848" text-anchor="middle" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">BTN_B</text>
+  <use href="#gnd" x="225" y="888"/>
+
+  <!-- ==================== J1 USB-C (left bottom) ==================== -->
+  <rect x="120" y="910" width="350" height="118" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2" rx="6"/>
+  <text x="140" y="944" font-size="16" font-weight="700" fill="#1A1D21">J1 · USB Type-C</text>
+  <text x="140" y="968" font-size="13" fill="#6B7075">5V 供电 · USB-CDC 串口（烧录 / 调试）</text>
+  <text x="140" y="990" font-size="13" fill="#6B7075">ARDUINO_USB_CDC_ON_BOOT</text>
+  <g font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21" text-anchor="end">
+    <text x="452" y="944">VBUS</text>
+    <text x="452" y="982">D-</text>
+    <text x="452" y="1012">D+</text>
+  </g>
+  <path d="M 470 978 h 250 v -129 h 20" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <path d="M 470 1008 h 258 v -118 h 12" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <path d="M 470 940 h 120" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <text x="600" y="930" text-anchor="middle" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">5V → 板载 3V3 LDO</text>
+
+  <!-- ==================== LCD1 (right) ==================== -->
+  <rect x="1520" y="270" width="380" height="240" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2" rx="6"/>
+  <text x="1540" y="306" font-size="17" font-weight="700" fill="#1A1D21">LCD1 · 2.8″ IPS 触摸屏 240×320</text>
+  <text x="1540" y="330" font-size="13" fill="#6B7075">ILI9341 类驱动 IC · 4 线 SPI @40MHz</text>
+  <text x="1540" y="352" font-size="13" fill="#6B7075">LVGL 画布 + PSRAM 帧缓冲直推（抱抱动画）</text>
+  <g font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">
+    <text x="1540" y="394">SDI / MOSI</text>
+    <text x="1540" y="429">SCK</text>
+    <text x="1540" y="464">CS</text>
+    <text x="1540" y="492">DC</text>
+  </g>
+  <!-- straight SPI wires then right-angle bend to LCD pins -->
+  <path d="M 1260 330 h 120 v 60 h 140" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <path d="M 1260 370 h 130 v 55 h 130" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <path d="M 1260 410 h 140 v 50 h 120" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <path d="M 1260 450 h 150 v 38 h 110" stroke="#1A1D21" stroke-width="1.7" fill="none"/>
+  <g font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">
+    <text x="1300" y="320">SPI_MOSI</text>
+    <text x="1300" y="360">SPI_SCLK</text>
+    <text x="1300" y="400">TFT_CS</text>
+    <text x="1300" y="440">TFT_DC</text>
+  </g>
+
+  <!-- ==================== U3 audio (right) ==================== -->
+  <rect x="1520" y="530" width="380" height="260" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2" rx="6"/>
+  <text x="1540" y="566" font-size="17" font-weight="700" fill="#1A1D21">U3 · 板载音频编解码（I2S0 主机）</text>
+  <text x="1540" y="590" font-size="13" fill="#6B7075">16bit · 全双工 · 录音 16kHz / 播放 TTS WAV</text>
+  <g font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">
+    <text x="1540" y="620">MCLK</text>
+    <text x="1540" y="644">BCLK</text>
+    <text x="1540" y="668">LRCK</text>
+    <text x="1540" y="704">ADC_DAT（DIN）</text>
+    <text x="1540" y="744">DAC_DAT（DOUT）</text>
+  </g>
+  <!-- mic path -->
+  <rect x="1700" y="600" width="180" height="46" fill="#FFFFFF" stroke="#1A1D21" stroke-width="1.6" rx="6"/>
+  <text x="1790" y="620" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1A1D21">MIC1 · MEMS 麦克风</text>
+  <text x="1790" y="638" text-anchor="middle" font-size="11.5" fill="#6B7075">录音 3s → WAV 上传</text>
+  <line x1="1700" y1="646" x2="1660" y2="646" stroke="#1A1D21" stroke-width="1.7" marker-end="url(#arw)"/>
+  <!-- speaker path -->
+  <rect x="1700" y="722" width="180" height="52" fill="#FFFFFF" stroke="#1A1D21" stroke-width="1.6" rx="6"/>
+  <text x="1790" y="744" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1A1D21">AMP1 + SPK1 · 扬声器</text>
+  <text x="1790" y="762" text-anchor="middle" font-size="11.5" fill="#6B7075">AMP_GAIN 使能（板载）</text>
+  <line x1="1660" y1="740" x2="1700" y2="740" stroke="#1A1D21" stroke-width="1.7" marker-end="url(#arw)"/>
+  <!-- i2s wires -->
+  <g stroke="#1A1D21" stroke-width="1.7" fill="none">
+    <path d="M 1260 560 h 200 v 56 h 60"/>
+    <path d="M 1260 600 h 210 v 40 h 50"/>
+    <path d="M 1260 640 h 220 v 24 h 40"/>
+    <path d="M 1260 680 h 230 v 20 h 30"/>
+    <path d="M 1260 720 h 240 v 20 h 20"/>
+  </g>
+  <g font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">
+    <text x="1290" y="550">I2S0_MCLK (3)</text>
+    <text x="1290" y="590">I2S0_BCLK (0)</text>
+    <text x="1290" y="630">I2S0_LRCK (38)</text>
+    <text x="1290" y="670">I2S0_DIN (39)</text>
+    <text x="1290" y="710">I2S0_DOUT (45)</text>
+  </g>
+
+  <!-- ==================== LED chain (right bottom) ==================== -->
+  <rect x="1520" y="830" width="380" height="150" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2" rx="6"/>
+  <text x="1540" y="866" font-size="17" font-weight="700" fill="#1A1D21">LED1–3 · WS2812 ×3（GRB 800kHz）</text>
+  <text x="1540" y="890" font-size="13" fill="#6B7075">状态灯效：呼吸 / 闪烁 / 稳定（非阻塞状态机）</text>
+  <g>
+    <rect x="1600" y="912" width="60" height="40" fill="#FFFFFF" stroke="#1A1D21" stroke-width="1.6"/>
+    <rect x="1700" y="912" width="60" height="40" fill="#FFFFFF" stroke="#1A1D21" stroke-width="1.6"/>
+    <rect x="1800" y="912" width="60" height="40" fill="#FFFFFF" stroke="#1A1D21" stroke-width="1.6"/>
+    <line x1="1660" y1="932" x2="1700" y2="932" stroke="#1A1D21" stroke-width="1.7" marker-end="url(#arw)"/>
+    <line x1="1760" y1="932" x2="1800" y2="932" stroke="#1A1D21" stroke-width="1.7" marker-end="url(#arw)"/>
+    <text x="1630" y="938" text-anchor="middle" font-size="13" font-weight="700" fill="#1A1D21">D1</text>
+    <text x="1730" y="938" text-anchor="middle" font-size="13" font-weight="700" fill="#1A1D21">D2</text>
+    <text x="1830" y="938" text-anchor="middle" font-size="13" font-weight="700" fill="#1A1D21">D3</text>
+  </g>
+  <path d="M 1260 830 h 130 v 102 h 210" stroke="#1A1D21" stroke-width="1.7" fill="none" marker-end="url(#arw)"/>
+  <text x="1300" y="820" font-size="12.5" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">LED_DATA (46)</text>
+
+  <!-- ==================== I2C optional strip (bottom) ==================== -->
+  <line x1="1000" y1="940" x2="1000" y2="1070" stroke="#1A1D21" stroke-width="1.7" stroke-dasharray="7 5"/>
+  <line x1="180" y1="1070" x2="1180" y2="1070" stroke="#1A1D21" stroke-width="3.4"/>
+  <text x="680" y="1052" text-anchor="middle" font-size="14" font-family="Consolas,'JetBrains Mono',monospace" fill="#1A1D21">I2C0（SDA=GPIO47 · SCL=GPIO48 · 板载上拉）</text>
+  <g stroke="#1A1D21" stroke-width="1.7">
+    <line x1="280" y1="1070" x2="280" y2="1098"/>
+    <line x1="480" y1="1070" x2="480" y2="1098"/>
+    <line x1="680" y1="1070" x2="680" y2="1098"/>
+    <line x1="880" y1="1070" x2="880" y2="1098"/>
+    <line x1="1080" y1="1070" x2="1080" y2="1098"/>
+  </g>
+  <g fill="#1A1D21">
+    <circle cx="280" cy="1070" r="3.6"/>
+    <circle cx="480" cy="1070" r="3.6"/>
+    <circle cx="680" cy="1070" r="3.6"/>
+    <circle cx="880" cy="1070" r="3.6"/>
+    <circle cx="1080" cy="1070" r="3.6"/>
+  </g>
+  <g font-size="13" fill="#8E979F">
+    <rect x="185" y="1098" width="190" height="52" fill="#FFFFFF" stroke="#B9BDB7" stroke-width="1.5" rx="6"/>
+    <text x="280" y="1120" text-anchor="middle">SC7A20H 加速度计</text>
+    <text x="280" y="1140" text-anchor="middle" font-size="11.5">I2C 0x19</text>
+    <rect x="385" y="1098" width="190" height="52" fill="#FFFFFF" stroke="#B9BDB7" stroke-width="1.5" rx="6"/>
+    <text x="480" y="1120" text-anchor="middle">LTR303 环境光</text>
+    <text x="480" y="1140" text-anchor="middle" font-size="11.5">I2C 0x29</text>
+    <rect x="585" y="1098" width="190" height="52" fill="#FFFFFF" stroke="#B9BDB7" stroke-width="1.5" rx="6"/>
+    <text x="680" y="1120" text-anchor="middle">AHT20 温湿度</text>
+    <text x="680" y="1140" text-anchor="middle" font-size="11.5">I2C 0x38</text>
+    <rect x="785" y="1098" width="190" height="52" fill="#FFFFFF" stroke="#B9BDB7" stroke-width="1.5" rx="6"/>
+    <text x="880" y="1120" text-anchor="middle">GT30L24A3W 字库</text>
+    <text x="880" y="1140" text-anchor="middle" font-size="11.5">SPI</text>
+    <rect x="985" y="1098" width="190" height="52" fill="#FFFFFF" stroke="#B9BDB7" stroke-width="1.5" rx="6"/>
+    <text x="1080" y="1120" text-anchor="middle">microSD 卡槽</text>
+    <text x="1080" y="1140" text-anchor="middle" font-size="11.5">SPI</text>
+  </g>
+  <text x="680" y="1184" text-anchor="middle" font-size="13" font-style="italic" fill="#8E979F">板载可选外设 —— 夸夸镜固件未启用（仅保留电气连接关系）</text>
+
+  <!-- ==================== title block ==================== -->
+  <g>
+    <rect x="1380" y="1150" width="560" height="104" fill="#FFFFFF" stroke="#1A1D21" stroke-width="2"/>
+    <line x1="1380" y1="1202" x2="1940" y2="1202" stroke="#1A1D21" stroke-width="1.5"/>
+    <line x1="1580" y1="1150" x2="1580" y2="1254" stroke="#1A1D21" stroke-width="1.5"/>
+    <line x1="1760" y1="1150" x2="1760" y2="1254" stroke="#1A1D21" stroke-width="1.5"/>
+    <g font-size="13.5" fill="#1A1D21">
+      <text x="1394" y="1172" fill="#8E979F" font-size="11">项目</text>
+      <text x="1394" y="1192" font-weight="700">夸夸镜 KuaKua Mirror</text>
+      <text x="1594" y="1172" fill="#8E979F" font-size="11">图名</text>
+      <text x="1594" y="1192" font-weight="700">系统级硬件连接图</text>
+      <text x="1774" y="1172" fill="#8E979F" font-size="11">平台</text>
+      <text x="1774" y="1192" font-weight="700" font-size="12.5">行空板 K10 (DFR1075)</text>
+      <text x="1394" y="1224" fill="#8E979F" font-size="11">版本</text>
+      <text x="1394" y="1244" font-weight="700">Rev 1.0 · 固件 v1.0.0</text>
+      <text x="1594" y="1224" fill="#8E979F" font-size="11">日期</text>
+      <text x="1594" y="1244" font-weight="700">2026-08-30</text>
+      <text x="1774" y="1224" fill="#8E979F" font-size="11">页码</text>
+      <text x="1774" y="1244" font-weight="700">1 / 1</text>
+    </g>
+  </g>
+</svg>

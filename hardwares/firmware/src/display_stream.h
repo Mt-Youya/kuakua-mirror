@@ -19,44 +19,44 @@
 #include <Arduino.h>
 #include "unihiker_k10.h"
 #include <math.h>
+#include <esp_system.h>   // esp_random() — 抱抱句库随机选择
 
 // ==================== 屏幕尺寸 ====================
 #define SCR_W 240
 #define SCR_H 320
 
 // ======================================================================
-// 月亮轮廓坐标 — 从参考图程序描摹所得 (IoU 0.9904)
+// 月亮轮廓坐标 — 两圆差集参数化生成（scripts/gen_moon_poly.py）
 // 200×200 画布，y 向下，沿轮廓有序排列
 // 坐标范围 0~200，绘制时按 drawMoon(x,y,size) 等比缩放
 // ======================================================================
-// 月牙轮廓：外缘（右半弧，从顶到底）→ 内缘（左半弧，从底回顶）
-// 构成单一连通多边形，扫描线填充自然产生月牙形状
-// 200×200 画布，y 向下
+// 几何：外圆 (100,80) r=80；内圆 (140,80) r=70（圆心距 40）
+// 月牙 = 外圆盘 − 内圆盘：左凸右凹、两端尖角（交点 y≈10 / y≈150）
+// 顶点序：外弧（下交点→圆底→最左→圆顶→上交点）→ 内弧（上交点→最左→下交点）
 static const int16_t MOON_POLY[][2] = {
-    // 经典几何月牙：两个圆弧的差集
-    // 外弧：圆心(100,80)，半径80，取右半弧（从顶到底）
-    // 内弧：圆心(120,80)，半径75，取左半弧（从底回顶）
-    // 两圆相交于上下两个尖角点，自然形成两端尖尖的月牙
-    // 两圆心在同一水平线 y=80 → 上下完全对称
-    // 外弧从顶到底（18点）
-    {100,  0},
-    {112,  1}, {124,  5}, {134, 12}, {142, 22}, {148, 35},
-    {152, 50}, {154, 65}, {155, 80}, {154, 95}, {152,110},
-    {148,125}, {142,138}, {134,148}, {124,155}, {112,159},
-    {100,160},
-    // 内弧从底回顶（圆心右移20px，半径75）
-    // 交点在 y≈0 和 y≈160 附近，形成尖角
-    {108,159}, {117,155}, {126,148}, {134,138}, {141,125},
-    {146,110}, {149, 95}, {150, 80}, {149, 65}, {146, 50},
-    {141, 35}, {134, 22}, {126, 12}, {117,  5}, {108,  1},
-    // 闭合回起点
-    {100,  0}
+    {139,150},
+    {126,156}, {112,159}, {97,160}, {83,158}, {69,154},
+    {56,147}, {45,138}, {35,127}, {28,115}, {23,101},
+    {20, 87}, {20, 73}, {23, 59}, {28, 45}, {35, 33},
+    {45, 22}, {56, 13}, {69,  6}, {83,  2}, {97,  0},
+    {112,  1}, {126,  4}, {139, 10},
+    // 内弧（上交点 → 内圆最左 → 下交点）
+    {126, 11}, {114, 15}, {102, 21}, {92, 29}, {83, 39},
+    {77, 50}, {72, 62}, {70, 75}, {70, 88}, {73,100},
+    {78,112}, {85,123}, {94,133}, {104,140}, {116,146},
+    {128,149}, {141,150},
 };
 #define MOON_POLY_COUNT (sizeof(MOON_POLY) / sizeof(MOON_POLY[0]))
 
-// 闭眼线折线（200 画布坐标）
+// 抱抱动画满月几何（drawMoonFat(76,28,92) 在 fatness=1 时的形状）
+// 200 画布质心 (81,80)×92/200 → 屏幕 (113, 65)；平均半径 64×92/200 ≈ 29
+#define HUG_MOON_CX 113
+#define HUG_MOON_CY 65
+#define HUG_MOON_R  29
+
+// 闭眼线折线（200 画布坐标）— 位于月牙肚中部（肚宽≈49px 时约占 1/3）
 static const int16_t EYE_LINE[][2] = {
-    {52, 82}, {57, 86}, {62, 87}, {66, 83}
+    {38, 80}, {43, 83}, {48, 84}, {53, 82}
 };
 #define EYE_LINE_COUNT (sizeof(EYE_LINE) / sizeof(EYE_LINE[0]))
 
@@ -159,6 +159,8 @@ public:
         _hugTextPhase = 0;   // 0=GREY, 1=INK
         _hugHaloStep = 0;
         _hugLastHaloTime = 0;
+        _hugPhase1EnterAt = 0;
+        _hugLastLineIdx = -1;  // 上次句库索引（去重用）
         _moonCentX = 0;
         _moonCentY = 0;
         _moonRAvg = 0;
@@ -223,10 +225,10 @@ public:
         _k10->canvas->canvasClear();
         _k10->setScreenBackground(COL_BG);
         drawMoon(76, 30, 92);
-        // 月亮右上侧雾蓝小点+光晕
-        _k10->canvas->canvasCircle(178, 52, 6, COL_ACCENT, COL_ACCENT, true);
-        _k10->canvas->canvasCircle(178, 52, 4, COL_BG, COL_BG, true);
-        _k10->canvas->canvasCircle(178, 52, 3, COL_ACCENT, COL_ACCENT, true);
+        // 月亮右上侧雾蓝小点+光晕（月伴星，距月尖约 35px）
+        _k10->canvas->canvasCircle(172, 46, 6, COL_ACCENT, COL_ACCENT, true);
+        _k10->canvas->canvasCircle(172, 46, 4, COL_BG, COL_BG, true);
+        _k10->canvas->canvasCircle(172, 46, 3, COL_ACCENT, COL_ACCENT, true);
         // 文案
         drawTextCentered("让我认真看看你", 206, COL_INK, 24);
         _k10->canvas->updateCanvas();
@@ -241,7 +243,7 @@ public:
         // 雾蓝小点（初始暗态，uiTick 里做呼吸）
         _breathOn = false;
         _lastBreathTime = millis();
-        _k10->canvas->canvasCircle(176, 54, 4, COL_ACCENT_DARK, COL_ACCENT_DARK, true);
+        _k10->canvas->canvasCircle(172, 46, 4, COL_ACCENT_DARK, COL_ACCENT_DARK, true);
         // 文案
         drawTextCentered("正在想怎么夸你", 208, COL_GREY, 24);
         _k10->canvas->updateCanvas();
@@ -382,11 +384,11 @@ public:
                 _lastBreathTime = now;
                 _breathOn = !_breathOn;
                 // 局部重绘：只擦+画小点区域
-                _k10->canvas->canvasRectangle(170, 48, 12, 12, COL_BG, COL_BG, true);
+                _k10->canvas->canvasRectangle(166, 40, 16, 16, COL_BG, COL_BG, true);
                 if (_breathOn) {
-                    _k10->canvas->canvasCircle(176, 54, 4, COL_ACCENT, COL_ACCENT, true);
+                    _k10->canvas->canvasCircle(172, 46, 4, COL_ACCENT, COL_ACCENT, true);
                 } else {
-                    _k10->canvas->canvasCircle(176, 54, 4, COL_ACCENT_DARK, COL_ACCENT_DARK, true);
+                    _k10->canvas->canvasCircle(172, 46, 4, COL_ACCENT_DARK, COL_ACCENT_DARK, true);
                 }
                 _k10->canvas->updateCanvas();
             }
@@ -442,8 +444,8 @@ public:
     // ==================================================================
     // 抱抱动效（月牙合拢成满月 = 拥抱的隐喻）
     // 非阻塞：hugStart() 初始化，hugTick() 每帧推进，hugIsActive() 查状态
-    // 月亮区域 76,28,92 → 屏幕坐标约 76~168, 28~120
-    // 动画区域扩展到 56,8,160,160（含光环）
+    // 月亮区域 76,28,92 → 屏幕坐标约 85~141, 28~102
+    // 满月中心 (113,65) 半径 29；光环最大半径 63 → 动画区域约 50~176, 2~128
     // ==================================================================
 
     // 抱抱动效启动（整屏重绘一次底色，后续局部推进）
@@ -456,12 +458,20 @@ public:
         _hugLastStepTime = millis();
         _hugFatness = 0;
         _hugTextIndex = 0;
-        _hugLastTextTime = millis();
+        _hugLastTextTime = millis() + HUG_TEXT_START_MS; // 文案按开始时间延后浮现
         _hugTextDone = false;
         _hugTextPhase = 0;
         _hugHaloStep = 0;
         _hugLastHaloTime = millis() + HUG_HALO_DELAY; // 落后半拍
+        _hugPhase1EnterAt = 0;
         _currentPage = 98;   // 抱抱页标记
+
+        // 随机选一句暖心文案（避免与上次连续重复）
+        int idx = (int)(esp_random() % HUG_COMFORT_LINES_COUNT);
+        if (idx == _hugLastLineIdx) idx = (idx + 1) % HUG_COMFORT_LINES_COUNT;
+        _hugLastLineIdx = idx;
+        _hugText = HUG_COMFORT_LINES[idx];
+        _hugTextTotal = countUtf8(_hugText);
 
         // 整屏重绘一次：瓷白底 + 待机版式（月亮区域后续覆盖）
         _k10->canvas->canvasClear();
@@ -482,7 +492,12 @@ public:
         unsigned long now = millis();
         unsigned long elapsed = now - _hugStartTime;
 
-        // ---- 阶段 0：合拢成满月（约 2s，14 步 × 140ms）----
+        // ---- 文案浮现：与阶段解耦，合拢过半即开始并行逐字浮现 ----
+        if (elapsed >= HUG_TEXT_START_MS && !_hugTextDone) {
+            updateHugText(now);
+        }
+
+        // ---- 阶段 0：合拢成满月（14 步 × HUG_STEP_MS）----
         if (_hugPhase == 0) {
             if (now - _hugLastStepTime >= HUG_STEP_MS) {
                 _hugLastStepTime = now;
@@ -500,7 +515,7 @@ public:
                 }
 
                 // 月色过渡：SILVER → SILVER_LIT
-                uint32_t moonColor = lerpColor(COL_SILVER, COL_SILVER_LIT, 
+                uint32_t moonColor = lerpColor(COL_SILVER, COL_SILVER_LIT,
                                                constrain(_hugFatness, 0.0f, 1.0f));
 
                 // 局部重绘月亮 + 光环区域
@@ -518,51 +533,45 @@ public:
                 _hugStep = 0;
                 _hugLastStepTime = now;
                 _hugFatness = 1.0f;
+                _hugPhase1EnterAt = now;
                 // 画满月柔光同心环
                 drawHaloRings();
             }
         }
 
-        // ---- 阶段 1：停留（约 1.8s，满月轻呼吸 + 光环淡出）----
+        // ---- 阶段 1：满月停留（HUG_HOLD_MS，轻呼吸 + 光环渐细淡出）----
         if (_hugPhase == 1) {
-            // 满月轻呼吸：fatness 1.0 ↔ 1.02，周期 1.5s
             if (now - _hugLastStepTime >= HUG_BREATH_MS) {
                 _hugLastStepTime = now;
-                _hugStep++;
-                // 用 sin 近似呼吸
-                float breath = 1.0f + 0.02f * sin((_hugStep % 2) * 3.14159f);
-                _hugFatness = breath;
+                // 呼吸用连续时间相位驱动：sin(2π·(t/T))，幅度 HUG_BREATH_AMPLITUDE
+                // （旧实现 sin((step%2)·π) 恒为 0，呼吸实际未动）
+                float phase = (float)(now - _hugPhase1EnterAt)
+                              / (float)HUG_BREATH_PERIOD_MS * 6.2831853f;
+                _hugFatness = 1.0f + HUG_BREATH_AMPLITUDE * sinf(phase);
                 redrawHugMoonArea(COL_SILVER_LIT);
-                // 光环渐细淡出
-                updateHalo(now);
-            }
-
-            // 文案逐字浮现（与合拢并行，合拢过半开始）
-            if (elapsed > 1000 && !_hugTextDone) {
-                updateHugText(now);
             }
 
             // 停留结束
-            if (elapsed >= 1000 + HUG_HOLD_MS + 1500) { // 合拢2s + 停留1.8s + 文案1.5s
+            if (now - _hugPhase1EnterAt >= HUG_HOLD_MS) {
                 _hugPhase = 2;
                 _hugStep = 0;
                 _hugLastStepTime = now;
             }
         }
 
-        // ---- 阶段 2：退场（约 1.4s，10 步 × 140ms）----
+        // ---- 阶段 2：退场（HUG_EXIT_STEPS 步 × HUG_EXIT_STEP_MS）----
         if (_hugPhase == 2) {
-            if (now - _hugLastStepTime >= HUG_STEP_MS) {
+            if (now - _hugLastStepTime >= HUG_EXIT_STEP_MS) {
                 _hugLastStepTime = now;
                 _hugStep++;
                 // fatness 1→0
-                float t = (float)_hugStep / 10.0f;
+                float t = (float)_hugStep / (float)HUG_EXIT_STEPS;
                 _hugFatness = 1.0f - t;
 
                 // 文案与细线两档淡出
                 uint32_t textColor;
                 uint32_t lineColor;
-                if (_hugStep <= 5) {
+                if (_hugStep <= HUG_EXIT_STEPS / 2) {
                     textColor = COL_GREY;      // INK → GREY
                     lineColor = COL_HAIRLINE_LIT;
                 } else {
@@ -571,14 +580,14 @@ public:
                 }
 
                 // 局部重绘月亮 + 文字区域
-                uint32_t moonColor = lerpColor(COL_SILVER_LIT, COL_SILVER, 
+                uint32_t moonColor = lerpColor(COL_SILVER_LIT, COL_SILVER,
                                                constrain(1.0f - _hugFatness, 0.0f, 1.0f));
                 redrawHugMoonArea(moonColor);
 
                 // 擦文字区域重画（扩大高度覆盖24号字完整行）
                 _k10->canvas->canvasRectangle(20, 180, 200, 50, COL_BG, COL_BG, true);
                 if (textColor != COL_BG) {
-                    drawTextCentered("抱抱你，辛苦啦", 196, textColor, 24);
+                    drawTextCentered(_hugText.c_str(), 196, textColor, 24);
                 }
                 // 细线（扩大擦除范围确保无残影）
                 _k10->canvas->canvasRectangle(70, 268, 100, 8, COL_BG, COL_BG, true);
@@ -589,7 +598,7 @@ public:
             }
 
             // 退场完成
-            if (_hugStep >= 10) {
+            if (_hugStep >= HUG_EXIT_STEPS) {
                 _hugActive = false;
                 return true; // 通知调用方：动画结束
             }
@@ -619,12 +628,16 @@ private:
     unsigned long _hugStartTime;
     unsigned long _hugLastStepTime;
     float _hugFatness;           // 0=月牙 1=满月
+    String _hugText;             // 本次抱抱选中的暖心句
+    int _hugTextTotal;           // 文案 UTF-8 字数
     int _hugTextIndex;
     unsigned long _hugLastTextTime;
     bool _hugTextDone;
     uint8_t _hugTextPhase;      // 0=GREY 1=INK
     int _hugHaloStep;
     unsigned long _hugLastHaloTime;
+    unsigned long _hugPhase1EnterAt;  // 满月停留阶段进入时刻
+    int _hugLastLineIdx;         // 上次句库索引（避免连续重复）
 
     // ---- 月亮几何预计算 ----
     int _moonCentX, _moonCentY;  // 质心（200画布坐标）
@@ -639,8 +652,8 @@ private:
             sumX += MOON_POLY[i][0];
             sumY += MOON_POLY[i][1];
         }
-        _moonCentX = sumX / n;  // ≈103.6
-        _moonCentY = sumY / n;  // ≈106.5
+        _moonCentX = sumX / n;  // ≈81
+        _moonCentY = sumY / n;  // ≈80
 
         long sumR = 0;
         for (int i = 0; i < n; i++) {
@@ -756,9 +769,8 @@ private:
 
     // ==================== 抱抱局部重绘（扩大擦除区域）====================
     // 擦除月亮+光环区域，重画变形月亮
-    // 月亮 76,28,92 → 实际范围约 76~168, 28~120
-    // 光环最大到 moonR+34 = 80 → 中心 122,74 → 42~202, -6~154
-    // 擦除区域扩大到 40,0, 200,170 确保覆盖
+    // 满月中心 (113,65) 半径 29；光环最大 63 → 范围约 50~176, 2~128
+    // 擦除区域 40,0,200,170 确保全覆盖
     void redrawHugMoonArea(uint32_t moonColor) {
         // 擦除月亮+光环区域（扩大到确保覆盖所有变形和光环像素）
         _k10->canvas->canvasRectangle(40, 0, 200, 170, COL_BG, COL_BG, true);
@@ -773,8 +785,8 @@ private:
 
     // ==================== 光环静态重绘（不推进步骤，只画当前状态）====================
     void drawHaloStatic() {
-        int mcx = 122, mcy = 74;
-        int moonR = 46;
+        int mcx = HUG_MOON_CX, mcy = HUG_MOON_CY;
+        int moonR = HUG_MOON_R;
 
         // 第一圈
         int r1 = moonR + (_hugHaloStep * 34) / 10;
@@ -815,8 +827,8 @@ private:
     }
     // 满月柔光同心环
     void drawHaloRings() {
-        int mcx = 122, mcy = 74;
-        int moonR = 46;
+        int mcx = HUG_MOON_CX, mcy = HUG_MOON_CY;
+        int moonR = HUG_MOON_R;
         // 内圈
         _k10->canvas->canvasCircle(mcx, mcy, moonR + 6, COL_HALO_INNER, COL_BG, false);
         // 外圈
@@ -826,27 +838,26 @@ private:
 
     // ==================== 抱抱文案逐字浮现 ====================
     void updateHugText(unsigned long now) {
-        const char* text = "抱抱你，辛苦啦";
-        int totalChars = 7; // 7 个中文字
+        if (_hugTextDone) return;
 
         if (now - _hugLastTextTime >= HUG_TEXT_CHAR_MS) {
             _hugLastTextTime = now;
 
-            if (_hugTextIndex < totalChars) {
+            if (_hugTextIndex < _hugTextTotal) {
                 _hugTextIndex++;
                 // 擦文字区域
                 _k10->canvas->canvasRectangle(20, 180, 200, 40, COL_BG, COL_BG, true);
                 // 画当前已显示的字（先 GREY 后 INK 两档）
                 // 第一遍：新字用 GREY
-                String shown = utf8Prefix(text, _hugTextIndex);
+                String shown = utf8Prefix(_hugText.c_str(), _hugTextIndex);
                 drawTextCentered(shown.c_str(), 196, COL_GREY, 24);
                 // 底部细线（先亮态）
                 drawHairline(SCR_W/2, 272, 60);
                 _k10->canvas->updateCanvas();
-            } else if (!_hugTextDone) {
+            } else {
                 // 全部字已显示，覆盖成 INK 色
                 _k10->canvas->canvasRectangle(20, 180, 200, 40, COL_BG, COL_BG, true);
-                drawTextCentered(text, 196, COL_INK, 24);
+                drawTextCentered(_hugText.c_str(), 196, COL_INK, 24);
                 // 细线恢复标准色
                 _k10->canvas->canvasRectangle(80, 270, 80, 4, COL_BG, COL_BG, true);
                 drawHairline(SCR_W/2, 272, 60);
