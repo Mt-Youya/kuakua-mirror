@@ -19,6 +19,7 @@
 #define C_COMPLIMENT  0xFFB464   // 夸奖/对话输出: (255,180,100)
 #define C_LISTENING   0x00783C   // 对话倾听/录音: (0,120,60)
 #define C_OFFLINE     0xFF9600   // 离线兜底: (255,150,0)
+#define C_HUG         0xFFA26B   // 抱抱: (255,162,107) 暖杏色
 #define C_ERROR       0xFF0000   // 错误: (255,0,0)
 
 // ==================== 设备状态枚举 ====================
@@ -31,6 +32,7 @@ enum LedState {
     ST_COMPLIMENT_OUTPUT, // 夸奖输出 - 暖黄色稳定亮
     ST_DIALOG_LISTENING,  // 对话倾听/录音 - 绿色稳定亮
     ST_DIALOG_OUTPUT,     // 对话输出 - 暖黄呼吸
+    ST_HUG,               // 抱抱 - 暖杏色呼吸
     ST_OFFLINE_FALLBACK,  // 离线兜底 - 橙色慢闪
     ST_ERROR,             // 错误 - 红色快闪
     ST_OFF                // 灭灯
@@ -148,6 +150,7 @@ private:
             case ST_COMPLIMENT_OUTPUT: _cfg = {C_COMPLIMENT,  FX_STEADY, 0, 8};    break;
             case ST_DIALOG_LISTENING:  _cfg = {C_LISTENING,   FX_STEADY, 0, 8};    break;
             case ST_DIALOG_OUTPUT:     _cfg = {C_COMPLIMENT,  FX_BREATH, 2000, 8}; break;
+            case ST_HUG:               _cfg = {C_HUG,         FX_BREATH, 1800, 8}; break;
             case ST_OFFLINE_FALLBACK:  _cfg = {C_OFFLINE,     FX_BLINK, 1000, 8};  break;
             case ST_ERROR:             _cfg = {C_ERROR,       FX_BLINK, 250, 9};   break;
             case ST_OFF:               _cfg = {0x000000,      FX_OFF, 0, 0};       break;

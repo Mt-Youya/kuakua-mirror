@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="'Microsoft YaHei','PingFang SC','Segoe UI',sans-serif">
+  <defs>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#2E3238" flood-opacity="0.10"/>
+    </filter>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#2E3238" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrowUp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7E99AD"/>
+    </marker>
+    <marker id="arrowDown" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#C98A4B"/>
+    </marker>
+    <marker id="arrowInk" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2E3238"/>
+    </marker>
+    <radialGradient id="moonGrad" cx="42%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#EAF1F7"/>
+      <stop offset="100%" stop-color="#C6D5E2"/>
+    </radialGradient>
+    <linearGradient id="hdrLine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7E99AD" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#7E99AD"/>
+      <stop offset="100%" stop-color="#FFA26B" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="1920" height="1080" fill="#FBFAF7"/>
+
+  <!-- ================= header ================= -->
+  <text x="960" y="66" text-anchor="middle" font-size="40" font-weight="700" fill="#2E3238">夸夸镜 KuaKua Mirror · 系统连接图</text>
+  <text x="960" y="104" text-anchor="middle" font-size="20" fill="#8E979F">会拍照、会倾听、会拥抱的 AI 陪伴魔镜 —— 端侧硬件 × 云端大模型实时多模态交互</text>
+  <rect x="610" y="122" width="700" height="3" fill="url(#hdrLine)"/>
+
+  <!-- ================= device card ================= -->
+  <g filter="url(#cardShadow)">
+    <rect x="70" y="160" width="580" height="650" rx="22" fill="#FFFFFF" stroke="#DAD6CC" stroke-width="1.5"/>
+  </g>
+  <text x="100" y="212" font-size="26" font-weight="700" fill="#2E3238">硬件终端 · 夸夸镜</text>
+  <text x="100" y="242" font-size="16" fill="#8E979F">行空板 K10（UNIHIKER K10 · ESP32-S3）· 固件 v1.0.0</text>
+
+  <!-- device mockup -->
+  <g filter="url(#softShadow)">
+    <rect x="104" y="272" width="230" height="470" rx="22" fill="#2E3238"/>
+  </g>
+  <circle cx="219" cy="294" r="6.5" fill="#4A4F57"/>
+  <circle cx="219" cy="294" r="3" fill="#7E99AD"/>
+  <rect x="118" y="312" width="202" height="330" rx="10" fill="#F6F3EC" stroke="#DAD6CC"/>
+  <!-- hug animation on screen -->
+  <circle cx="219" cy="450" r="46" fill="url(#moonGrad)"/>
+  <path d="M 172 396 A 66 66 0 0 0 172 504" fill="none" stroke="#7E99AD" stroke-width="10" stroke-linecap="round"/>
+  <path d="M 266 396 A 66 66 0 0 1 266 504" fill="none" stroke="#FFA26B" stroke-width="10" stroke-linecap="round"/>
+  <text x="219" y="560" text-anchor="middle" font-size="17" fill="#2E3238">抱抱你，辛苦啦</text>
+  <text x="219" y="588" text-anchor="middle" font-size="12" fill="#98A1A9"> Hug Animation · 直推 ≥40FPS</text>
+  <!-- status LEDs -->
+  <circle cx="189" cy="676" r="12" fill="#FFB464" opacity="0.22"/>
+  <circle cx="219" cy="676" r="12" fill="#A5BCCF" opacity="0.22"/>
+  <circle cx="249" cy="676" r="12" fill="#FFB464" opacity="0.22"/>
+  <circle cx="189" cy="676" r="6" fill="#FFB464"/>
+  <circle cx="219" cy="676" r="6" fill="#A5BCCF"/>
+  <circle cx="249" cy="676" r="6" fill="#FFB464"/>
+  <text x="219" y="712" text-anchor="middle" font-size="11" fill="#98A1A9">3 × WS2812 状态灯</text>
+  <rect x="203" y="726" width="32" height="7" rx="3.5" fill="#4A4F57"/>
+  <!-- buttons -->
+  <rect x="88" y="392" width="15" height="70" rx="7.5" fill="#7E99AD"/>
+  <text x="95.5" y="433" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">A</text>
+  <rect x="335" y="392" width="15" height="70" rx="7.5" fill="#FFA26B"/>
+  <text x="342.5" y="433" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">B</text>
+
+  <!-- chip list -->
+  <g font-size="15">
+    <circle cx="384" cy="306" r="5" fill="#7E99AD"/>
+    <text x="400" y="312" font-weight="700" fill="#2E3238">主控 · ESP32-S3 双核 @240MHz</text>
+    <text x="400" y="333" font-size="13" fill="#8E979F">16MB Flash · 8MB PSRAM · Wi-Fi 2.4GHz</text>
+
+    <circle cx="384" cy="370" r="5" fill="#7E99AD"/>
+    <text x="400" y="376" font-weight="700" fill="#2E3238">显示屏 · 2.8″ IPS 触摸屏</text>
+    <text x="400" y="397" font-size="13" fill="#8E979F">240×320 · LVGL + PSRAM 帧缓冲直推</text>
+
+    <circle cx="384" cy="434" r="5" fill="#7E99AD"/>
+    <text x="400" y="440" font-weight="700" fill="#2E3238">摄像头 · 200 万像素</text>
+    <text x="400" y="461" font-size="13" fill="#8E979F">DVP 8bit 并口 · QVGA JPEG 抓拍</text>
+
+    <circle cx="384" cy="498" r="5" fill="#7E99AD"/>
+    <text x="400" y="504" font-weight="700" fill="#2E3238">音频 · I2S 全双工</text>
+    <text x="400" y="525" font-size="13" fill="#8E979F">麦克风录音（16kHz）· 扬声器播放</text>
+
+    <circle cx="384" cy="562" r="5" fill="#FFB464"/>
+    <text x="400" y="568" font-weight="700" fill="#2E3238">灯效 · 3 × WS2812 RGB</text>
+    <text x="400" y="589" font-size="13" fill="#8E979F">呼吸 / 闪烁状态机 · 情绪可视化</text>
+
+    <circle cx="384" cy="626" r="5" fill="#FFB464"/>
+    <text x="400" y="632" font-weight="700" fill="#2E3238">按键 A / B · 板载</text>
+    <text x="400" y="653" font-size="13" fill="#8E979F">短按 / 长按复用 · 板载 IO 扩展读取</text>
+
+    <circle cx="384" cy="690" r="5" fill="#A5BCCF"/>
+    <text x="400" y="696" font-weight="700" fill="#2E3238">USB-C</text>
+    <text x="400" y="717" font-size="13" fill="#8E979F">5V 供电 · CDC 串口（烧录 / 调试）</text>
+  </g>
+
+  <!-- ================= link zone ================= -->
+  <!-- wifi icon -->
+  <g stroke="#7E99AD" stroke-width="5" fill="none" stroke-linecap="round">
+    <path d="M 926 258 A 48 48 0 0 1 994 258"/>
+    <path d="M 938 276 A 31 31 0 0 1 982 276"/>
+    <path d="M 949 293 A 15.5 15.5 0 0 1 971 293"/>
+  </g>
+  <circle cx="960" cy="308" r="6" fill="#7E99AD"/>
+  <text x="960" y="342" text-anchor="middle" font-size="16" fill="#8E979F">Wi-Fi · 互联网</text>
+
+  <!-- uplink arrow -->
+  <line x1="662" y1="430" x2="1258" y2="430" stroke="#7E99AD" stroke-width="3.5" marker-end="url(#arrowUp)"/>
+  <text x="960" y="400" text-anchor="middle" font-size="19" font-weight="700" fill="#5E788C">上行请求 · HTTPS（TLS 证书校验）</text>
+  <text x="960" y="462" text-anchor="middle" font-size="15" fill="#5E788C">① 照片 JPEG（QVGA · Base64 ≤ 500KB）→ /praise/stream</text>
+  <text x="960" y="486" text-anchor="middle" font-size="15" fill="#5E788C">② 录音 WAV（16kHz · 16bit · 3s）→ /chat/stream</text>
+
+  <!-- downlink arrow -->
+  <line x1="1258" y1="600" x2="662" y2="600" stroke="#C98A4B" stroke-width="3.5" marker-end="url(#arrowDown)"/>
+  <text x="960" y="572" text-anchor="middle" font-size="19" font-weight="700" fill="#A56B33">下行响应 · SSE 流式 + REST</text>
+  <text x="960" y="632" text-anchor="middle" font-size="15" fill="#A56B33">夸奖 / 对话文案（逐字流式显示）+ TTS 语音 WAV（≤1MB）</text>
+
+  <rect x="760" y="690" width="400" height="36" rx="18" fill="#FFFFFF" stroke="#DAD6CC"/>
+  <text x="960" y="714" text-anchor="middle" font-size="14" fill="#8E979F">设备身份：X-Device-ID + Bearer Token（NVS 存储 · 首启自动轮换）</text>
+
+  <!-- ================= cloud card ================= -->
+  <g filter="url(#cardShadow)">
+    <rect x="1270" y="160" width="580" height="650" rx="22" fill="#FFFFFF" stroke="#DAD6CC" stroke-width="1.5"/>
+  </g>
+  <text x="1300" y="212" font-size="26" font-weight="700" fill="#2E3238">云端服务</text>
+  <text x="1300" y="242" font-size="16" fill="#8E979F">无状态网关 + 大模型能力层 · 流式响应</text>
+
+  <!-- backend box -->
+  <rect x="1300" y="268" width="520" height="216" rx="16" fill="#EEF3F8" stroke="#A5BCCF" stroke-width="1.5"/>
+  <text x="1330" y="306" font-size="21" font-weight="700" fill="#2E3238">KuaKua API 后端</text>
+  <rect x="1330" y="322" width="308" height="32" rx="16" fill="#FFFFFF" stroke="#A5BCCF"/>
+  <text x="1484" y="343" text-anchor="middle" font-size="14" fill="#5E788C" font-family="Consolas,'JetBrains Mono',monospace">kuakua-api.cyrusdoyle.me</text>
+  <text x="1330" y="386" font-size="15" fill="#2E3238">Spring Boot 3.2 · WebFlux · Java 21</text>
+  <text x="1330" y="413" font-size="14" fill="#5E788C" font-family="Consolas,'JetBrains Mono',monospace">/praise/stream · /chat/stream · /tts · /audio</text>
+  <text x="1330" y="440" font-size="15" fill="#2E3238">设备凭证签发 / 轮换 · 媒资生成与缓存</text>
+  <text x="1330" y="467" font-size="14" fill="#8E979F">响应式非阻塞 · SSE 逐字推送 · 健康检查</text>
+
+  <!-- backend <-> openai arrows -->
+  <line x1="1540" y1="484" x2="1540" y2="530" stroke="#2E3238" stroke-width="2.5" marker-end="url(#arrowInk)" marker-start="url(#arrowInk)"/>
+  <text x="1562" y="513" font-size="14" fill="#8E979F">音频 / 文本 / 图像调用</text>
+
+  <!-- openai box -->
+  <rect x="1300" y="536" width="520" height="246" rx="16" fill="#FFF7EE" stroke="#FFB464" stroke-width="1.5"/>
+  <text x="1330" y="574" font-size="21" font-weight="700" fill="#2E3238">OpenAI 能力层</text>
+  <g>
+    <rect x="1330" y="592" width="460" height="44" rx="10" fill="#FFFFFF" stroke="#FFB464"/>
+    <text x="1352" y="620" font-size="16" fill="#2E3238"><tspan font-weight="700">Whisper · ASR</tspan>　语音 → 文字</text>
+    <line x1="1560" y1="636" x2="1560" y2="650" stroke="#C98A4B" stroke-width="2.5" marker-end="url(#arrowDown)"/>
+    <rect x="1330" y="652" width="460" height="44" rx="10" fill="#FFFFFF" stroke="#FFB464"/>
+    <text x="1352" y="680" font-size="16" fill="#2E3238"><tspan font-weight="700">GPT-4o · LLM</tspan>　多模态理解 → 夸奖 / 对话生成</text>
+    <line x1="1560" y1="696" x2="1560" y2="710" stroke="#C98A4B" stroke-width="2.5" marker-end="url(#arrowDown)"/>
+    <rect x="1330" y="712" width="460" height="44" rx="10" fill="#FFFFFF" stroke="#FFB464"/>
+    <text x="1352" y="740" font-size="16" fill="#2E3238"><tspan font-weight="700">TTS</tspan>　文字 → 语音（WAV 回传设备播放）</text>
+  </g>
+
+  <!-- ================= interaction band ================= -->
+  <g filter="url(#cardShadow)">
+    <rect x="70" y="840" width="1780" height="192" rx="22" fill="#FFFFFF" stroke="#DAD6CC" stroke-width="1.5"/>
+  </g>
+  <text x="100" y="884" font-size="21" font-weight="700" fill="#2E3238">四种交互（用户视角）</text>
+
+  <!-- chip 1 -->
+  <rect x="100" y="906" width="410" height="100" rx="14" fill="#F4F7FA" stroke="#A5BCCF"/>
+  <rect x="118" y="924" width="86" height="30" rx="15" fill="#7E99AD"/>
+  <text x="161" y="945" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">短按 A</text>
+  <text x="220" y="946" font-size="18" font-weight="700" fill="#2E3238">拍照夸夸</text>
+  <text x="118" y="982" font-size="14" fill="#5E788C">拍照 → 云端看图 → 逐字夸奖 + 语音朗读</text>
+
+  <!-- chip 2 -->
+  <rect x="540" y="906" width="410" height="100" rx="14" fill="#F1F7F3" stroke="#7FB99A"/>
+  <rect x="558" y="924" width="86" height="30" rx="15" fill="#3E8E63"/>
+  <text x="601" y="945" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">长按 A</text>
+  <text x="660" y="946" font-size="18" font-weight="700" fill="#2E3238">语音对话</text>
+  <text x="558" y="982" font-size="14" fill="#3F7355">录音 3s → ASR → LLM 回复 → 屏显 + 朗读</text>
+
+  <!-- chip 3 -->
+  <rect x="980" y="906" width="410" height="100" rx="14" fill="#FFF6EF" stroke="#FFA26B"/>
+  <rect x="998" y="924" width="86" height="30" rx="15" fill="#F08A4B"/>
+  <text x="1041" y="945" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">短按 B</text>
+  <text x="1100" y="946" font-size="18" font-weight="700" fill="#2E3238">抱抱动画</text>
+  <text x="998" y="982" font-size="14" fill="#A56B33">双弧合拢满月 · 呼吸灯效 + 暖心文案</text>
+
+  <!-- chip 4 -->
+  <rect x="1420" y="906" width="410" height="100" rx="14" fill="#F5F5F3" stroke="#B9BDB7"/>
+  <rect x="1438" y="924" width="86" height="30" rx="15" fill="#8E979F"/>
+  <text x="1481" y="945" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">长按 B</text>
+  <text x="1540" y="946" font-size="18" font-weight="700" fill="#2E3238">网络恢复</text>
+  <text x="1438" y="982" font-size="14" fill="#6B7075">重连 Wi-Fi · 重新加载设备凭证</text>
+
+  <!-- footer -->
+  <text x="960" y="1064" text-anchor="middle" font-size="13" fill="#B4B8B2">夸夸镜 KuaKua Mirror · 黑客松路演 · 2026-08-30 · 固件基于 PlatformIO / Arduino（UNIHIKER K10）</text>
+</svg>

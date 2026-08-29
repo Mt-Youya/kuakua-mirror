@@ -50,14 +50,14 @@ public:
         http.addHeader("Authorization", "Bearer " + _token);
         String body = "{\"device_id\":\"" + _deviceId + "\",\"text\":\"" + jsonEscape(text) + "\"}";
         int status = http.POST(body);
+        String raw = http.getString();
+        http.end();
         if (status != HTTP_CODE_OK) {
-            Serial.printf("[K10] api action=tts status=%d\n", status);
-            http.end();
+            Serial.printf("[K10] api action=tts status=%d body=%s\n", status, raw.c_str());
             return "";
         }
         JsonDocument response;
-        DeserializationError error = deserializeJson(response, http.getStream());
-        http.end();
+        DeserializationError error = deserializeJson(response, raw);
         String audioUrl = error ? "" : String(response["data"]["audio_url"] | "");
         Serial.printf("[K10] api action=tts result=%s audio_url_bytes=%u\n", error ? error.c_str() : "ok", audioUrl.length());
         return audioUrl;

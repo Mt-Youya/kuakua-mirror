@@ -67,7 +67,25 @@
 #define COL_HALO_OUTER 0xC6D5E2
 #define COL_HAIRLINE_LIT 0xE8E4DA
 #define HUG_STEP_MS 140
-#define HUG_TEXT_CHAR_MS 180
-#define HUG_HOLD_MS 1800
-#define HUG_BREATH_MS 750
+#define HUG_TEXT_START_MS 1000  // 文案开始时间（合拢过半，随动画并行浮现）
+#define HUG_TEXT_CHAR_MS 150    // 文案逐字间隔
+#define HUG_HOLD_MS 1500        // 满月停留时长
+#define HUG_BREATH_MS 150       // 呼吸重绘步进（越小越顺滑）
+#define HUG_BREATH_PERIOD_MS 1500  // 呼吸完整周期
+#define HUG_BREATH_AMPLITUDE 0.04f // 呼吸幅度（原 0.02 像素级位移不可见）
 #define HUG_HALO_DELAY 280
+#define HUG_EXIT_STEP_MS 120  // 退场步进
+#define HUG_EXIT_STEPS 8      // 退场总步数
+
+// 抱抱暖心句库（均 ≤8 字，适配 24 号字单行显示）
+#define HUG_COMFORT_LINES_COUNT 8
+static const char* const HUG_COMFORT_LINES[HUG_COMFORT_LINES_COUNT] = {
+    "抱抱你，辛苦啦",
+    "今天也辛苦了",
+    "有我在，不孤单",
+    "你已经很棒了",
+    "累的时候抱抱我",
+    "我永远都在这里",
+    "你值得被温柔以待",
+    "休息一下，有我呢",
+};

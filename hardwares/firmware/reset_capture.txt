@@ -1,0 +1,146 @@
+[K10] 777ms boot action=start
+[0;32mI (516) initBoard: init board
+[0m
+[0;33mW (516) initBoard: The codec going to stop[0m
+[0;31mE (518) initBoard: Es7243e STOP failed![0m
+[0;33mW (519) initBoard: The codec going to stop[0m
+[0;31mE (633) initBoard: Es7243e initialize failed![0m
+[0;31mE (658) initBoard: Es7243e START failed![0m
+[0;32mI (830) gpio: GPIO[40]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (831) gpio: GPIO[44]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (838) gpio: GPIO[41]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (848) gpio: GPIO[42]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (867) I2S: DMA Malloc info, datalen=blocksize=1200, dma_buf_count=3[0m
+[0;32mI (868) I2S: DMA Malloc info, datalen=blocksize=1200, dma_buf_count=3[0m
+[0;32mI (871) I2S: I2S0, MCLK output by GPIO3[0m
+[0;32mI (898) gpio: GPIO[14]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (899) gpio: GPIO[13]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (906) gpio: GPIO[12]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (915) gpio: GPIO[21]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (924) gpio: GPIO[21]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (934) gpio: GPIO[14]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (943) gpio: GPIO[13]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (1677) s3 ll_cam: DMA Channel=1[0m
+[0;32mI (1677) cam_hal: cam init ok[0m
+[0;32mI (1677) sccb: pin_sda 47 pin_scl 48[0m
+[0;32mI (1678) sccb: sccb_i2c_port=0[0m
+[0;32mI (1683) sccb: Searching for camera address 60[0m
+[0;32mI (1687) camera: Detected camera at address=0x3c[0m
+[0;32mI (1693) ov3660: Mismatch PID=0x0[0m
+[0;32mI (1697) ov5640: Mismatch PID=0x0[0m
+[0;32mI (1704) camera: Detected GC2145 camera[0m
+[0;32mI (1704) camera: Camera PID=0x2145 VER=0x00 MIDL=0x00 MIDH=0x00[0m
+[0;32mI (2006) s3 ll_cam: node_size: 3840, nodes_per_line: 1, lines_per_node: 8[0m
+[0;32mI (2006) s3 ll_cam: dma_half_buffer_min:  3840, dma_half_buffer: 15360, lines_per_half_buffer: 32, dma_buffer_size: 30720[0m
+[0;32mI (2014) cam_hal: buffer_size: 30720, half_buffer_size: 15360, node_buffer_size: 3840, node_cnt: 8, total_cnt: 10[0m
+[0;32mI (2025) cam_hal: Allocating 153600 Byte frame buffer in PSRAM[0m
+[0;32mI (2032) cam_hal: Allocating 153600 Byte frame buffer in PSRAM[0m
+[0;32mI (2038) cam_hal: cam config ok[0m
+[0;32mI (2042) gc2145: subsample win:480x640, ratio:0.500000[0m
+[K10] 2325ms camera result=ready
+[0;31mE (2063) I2S: register I2S object to platform failed[0m
+[0;32mI (2064) I2S: I2S0, MCLK output by GPIO3[0m
+[K10] 2326ms audio result=ready
+init voice set:template
+ESP Chinese TTS v1.7 (Sep 22 2022 14:35:13, 1)
+[HUGVOICE] init ok(xiaoxin音库)
+[K10] 2331ms wifi action=connect source=nvs
+[K10] 3884ms wifi result=connected status=3
+[K10] credentials nvs_open=1
+[K10] credentials source=nvs device_id_bytes=20 token_bytes=64
+[K10] 3886ms credentials boot_result=ready ready=1
+[K10] 3886ms boot result=ready
+[LED] state=1 color=0x001E50 bright=1
+[K10] 5336ms button=B action=pressed
+[K10] 5377ms button=B action=released held_ms=40 long=0
+[K10] 5378ms button=B action=short-press-queued
+[0;32mI (5123) gpio: GPIO[14]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (5124) gpio: GPIO[13]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (5131) gpio: GPIO[14]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (5141) gpio: GPIO[13]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[HUG] player ready
+[HUG] start line=4 text=累的时候抱抱我
+input:lei4 de5 shi2 hou4 bao4 bao4 wo3
+data:lei4 de5 shi2 hou4 bao4 bao4 wo3
+word_num:1, i:32
+[0;31mE (5511) tts_parser: Fail to search lei4 de5 shi2 hou4 bao4 bao4 wo3 in voice set xiaoxin_20220718 [0m
+
+assert failed: esp_tts_utt_append esp_tts_parser.c:93 (syll_idx>=0)
+
+
+Backtrace: 0x40378266:0x3fcebda0 0x4037e231:0x3fcebdc0 0x40384d05:0x3fcebde0 0x42050171:0x3fcebf10 0x4205023b:0x3fcebf30 0x4204f9ac:0x3fcebf50 0x4200a1b0:0x3fcebf70 0x420154cc:0x3fcebfa0
+
+
+
+
+ELF file SHA256: d3f6b69368637d2a
+
+E (5548) esp_core_dump_flash: Not enough space to save core dump!
+E (5554) esp_core_dump_elf: Failed to prepare core dump storage (257)!
+E (5560) esp_core_dump_common: Core dump write binary failed with error=257
+Rebooting...
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0xc (RTC_SW_CPU_RST),boot:0x8 (SPI_FAST_FLASH_BOOT)
+Saved PC:0x420e55fe
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x44c
+load:0x403c9700,len:0xbe4
+load:0x403cc700,len:0x2a68
+entry 0x403c98d4
+[K10] 775ms boot action=start
+[0;32mI (516) initBoard: init board
+[0m
+[0;33mW (516) initBoard: The codec going to stop[0m
+[0;31mE (518) initBoard: Es7243e STOP failed![0m
+[0;33mW (519) initBoard: The codec going to stop[0m
+[0;31mE (633) initBoard: Es7243e initialize failed![0m
+[0;31mE (658) initBoard: Es7243e START failed![0m
+[0;32mI (830) gpio: GPIO[40]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (831) gpio: GPIO[44]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (838) gpio: GPIO[41]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (848) gpio: GPIO[42]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (867) I2S: DMA Malloc info, datalen=blocksize=1200, dma_buf_count=3[0m
+[0;32mI (868) I2S: DMA Malloc info, datalen=blocksize=1200, dma_buf_count=3[0m
+[0;32mI (871) I2S: I2S0, MCLK output by GPIO3[0m
+[0;32mI (898) gpio: GPIO[14]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (899) gpio: GPIO[13]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (906) gpio: GPIO[12]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (915) gpio: GPIO[21]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (925) gpio: GPIO[21]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (934) gpio: GPIO[14]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (943) gpio: GPIO[13]| InputEn: 1| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (1677) s3 ll_cam: DMA Channel=1[0m
+[0;32mI (1677) cam_hal: cam init ok[0m
+[0;32mI (1677) sccb: pin_sda 47 pin_scl 48[0m
+[0;32mI (1678) sccb: sccb_i2c_port=0[0m
+[0;32mI (1683) sccb: Searching for camera address 60[0m
+[0;32mI (1687) camera: Detected camera at address=0x3c[0m
+[0;32mI (1693) ov3660: Mismatch PID=0x0[0m
+[0;32mI (1697) ov5640: Mismatch PID=0x0[0m
+[0;32mI (1704) camera: Detected GC2145 camera[0m
+[0;32mI (1704) camera: Camera PID=0x2145 VER=0x00 MIDL=0x00 MIDH=0x00[0m
+[0;32mI (2006) s3 ll_cam: node_size: 3840, nodes_per_line: 1, lines_per_node: 8[0m
+[0;32mI (2006) s3 ll_cam: dma_half_buffer_min:  3840, dma_half_buffer: 15360, lines_per_half_buffer: 32, dma_buffer_size: 30720[0m
+[0;32mI (2014) cam_hal: buffer_size: 30720, half_buffer_size: 15360, node_buffer_size: 3840, node_cnt: 8, total_cnt: 10[0m
+[0;32mI (2025) cam_hal: Allocating 153600 Byte frame buffer in PSRAM[0m
+[0;32mI (2032) cam_hal: Allocating 153600 Byte frame buffer in PSRAM[0m
+[0;32mI (2038) cam_hal: cam config ok[0m
+[0;32mI (2042) gc2145: subsample win:480x640, ratio:0.500000[0m
+[K10] 2323ms camera result=ready
+[0;31mE (2063) I2S: register I2S object to platform failed[0m
+[0;32mI (2064) I2S: I2S0, MCLK output by GPIO3[0m
+[K10] 2324ms audio result=ready
+init voice set:template
+ESP Chinese TTS v1.7 (Sep 22 2022 14:35:13, 1)
+[HUGVOICE] init ok(xiaoxin音库)
+[K10] 2329ms wifi action=connect source=nvs
+cam_hal: EV-VSYNC-OVF
+[K10] 4889ms wifi result=connected status=3
+[K10] credentials nvs_open=1
+[K10] credentials source=nvs device_id_bytes=20 token_bytes=64
+[K10] 4891ms credentials boot_result=ready ready=1
+[K10] 4891ms boot result=ready
+[LED] state=1 color=0x001E50 bright=1
+cam_hal: EV-VSYNC-OVF
