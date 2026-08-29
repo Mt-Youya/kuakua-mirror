@@ -39,8 +39,12 @@ public class TestController {
                 .onErrorResume(e -> {
                     Map<String, Object> error = new java.util.HashMap<>();
                     error.put("success", false);
-                    error.put("error", e.getMessage());
-                    error.put("hint", "检查 DASHSCOPE_API_KEY 和 DASHSCOPE_TTS_VOICE 环境变量");
+                    error.put("errorType", e.getClass().getSimpleName());
+                    error.put("errorMessage", e.getMessage());
+                    if (e.getCause() != null) {
+                        error.put("cause", e.getCause().getMessage());
+                    }
+                    error.put("note", "TTS 模型或音色配置可能有问题，但这不影响文本模型的正常使用");
                     return Mono.just(error);
                 });
     }
