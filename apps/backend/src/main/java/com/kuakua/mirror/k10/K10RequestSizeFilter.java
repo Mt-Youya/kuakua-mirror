@@ -19,7 +19,7 @@ public class K10RequestSizeFilter extends OncePerRequestFilter {
 
     public static final long MAX_REQUEST_BODY_BYTES = 1_500_000;
     private static final Set<String> PROTECTED_PATHS = Set.of(
-            "/api/praise/stream", "/api/chat/stream", "/api/tts"
+            "/api/v1/praise/stream", "/api/v1/chat/stream", "/api/v1/tts"
     );
 
     @Override
