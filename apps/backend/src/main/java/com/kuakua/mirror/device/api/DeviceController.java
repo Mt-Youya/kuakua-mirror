@@ -73,6 +73,19 @@ public class DeviceController {
     }
 
     /**
+     * 删除设备及其关联数据
+     * DELETE /api/v1/devices/{deviceId}
+     */
+    @DeleteMapping("/{deviceId}")
+    public ResponseEntity<Void> deleteDevice(
+            @PathVariable String deviceId,
+            @AuthenticationPrincipal Device device) {
+        owned(device, deviceId);
+        deviceService.deleteDevice(deviceId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
      * 获取设备配置
      * GET /api/v1/devices/{deviceId}/config
      */

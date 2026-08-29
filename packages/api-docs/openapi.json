@@ -32,8 +32,8 @@
     "/api/v1/devices/activate": {
       "post": {
         "tags": ["设备"],
-        "summary": "激活设备或恢复 Token",
-        "description": "一次性激活码只能使用一次；恢复码会立即废止旧 Token。",
+        "summary": "使用已预置的出厂码或恢复码激活设备",
+        "description": "接受已预置且未使用的出厂码或恢复码；激活后该码立即失效，恢复码会立即废止旧 Token。",
         "security": [],
         "requestBody": {
           "required": true,
@@ -65,6 +65,20 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActivationResponse" } } }
           },
           "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/api/v1/devices/{deviceId}": {
+      "delete": {
+        "tags": ["设备"],
+        "summary": "删除设备及其关联数据",
+        "description": "仅 Token 所属设备可以调用。删除设备、配置、日志、心跳、OTA、对话、激活码和图片；无法恢复。",
+        "parameters": [{ "$ref": "#/components/parameters/DeviceId" }],
+        "security": [{ "DeviceToken": [] }],
+        "responses": {
+          "204": { "description": "设备已删除" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "503": { "$ref": "#/components/responses/StorageUnavailable" }
         }
       }
     },

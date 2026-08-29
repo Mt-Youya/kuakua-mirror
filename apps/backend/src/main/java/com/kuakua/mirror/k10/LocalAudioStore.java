@@ -58,6 +58,15 @@ public class LocalAudioStore {
         return filename.matches("[a-f0-9-]+\\.wav") && owners.containsKey(filename) && !deviceId.equals(owners.get(filename));
     }
 
+    public void deleteByDeviceId(String deviceId) throws IOException {
+        for (var entry : owners.entrySet()) {
+            if (deviceId.equals(entry.getValue())) {
+                Files.deleteIfExists(directory.resolve(entry.getKey()));
+                owners.remove(entry.getKey(), deviceId);
+            }
+        }
+    }
+
     @Scheduled(fixedRate = 60_000)
     void cleanupExpired() throws IOException {
         Instant expiresBefore = Instant.now().minus(Duration.ofMinutes(audioTtlMinutes));

@@ -14,10 +14,14 @@ import org.springframework.mock.web.MockMultipartFile;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.startsWith;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -141,5 +145,13 @@ class DeviceLifecycleIntegrationTest {
         mockMvc.perform(get("/api/v1/devices/" + firstDevice.getDeviceId() + "/config")
                         .header("Authorization", "Bearer " + recoveryToken))
                 .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/api/v1/devices/" + firstDevice.getDeviceId())
+                        .header("Authorization", "Bearer " + recoveryToken))
+                .andExpect(status().isNoContent());
+        verify(storageService).delete(eq("device-images"), startsWith(firstDevice.getDeviceId() + "/"));
+        mockMvc.perform(get("/api/v1/devices/" + firstDevice.getDeviceId() + "/config")
+                        .header("Authorization", "Bearer " + recoveryToken))
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -4,6 +4,7 @@ import com.kuakua.mirror.device.domain.Device;
 import com.kuakua.mirror.device.domain.DeviceConfig;
 import com.kuakua.mirror.device.domain.DeviceStatus;
 import com.kuakua.mirror.device.domain.FactoryActivationCode;
+import com.kuakua.mirror.k10.LocalAudioStore;
 import com.kuakua.mirror.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,8 @@ public class DeviceService {
     private final DeviceRepository deviceRepository;
     private final DeviceConfigRepository deviceConfigRepository;
     private final FactoryActivationCodeRepository activationCodeRepository;
+    private final DeviceArtifactService artifactService;
+    private final LocalAudioStore audioStore;
 
     /**
      * 设备激活
@@ -150,6 +153,18 @@ public class DeviceService {
         deviceRepository.save(device);
         log.info("设备Token已轮换: deviceId={}", deviceId);
         return deviceToken;
+    }
+
+    @Transactional
+    public void deleteDevice(String deviceId) {
+        artifactService.deleteImages(deviceId);
+        try {
+            audioStore.deleteByDeviceId(deviceId);
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("无法删除设备临时音频", exception);
+        }
+        deviceRepository.deleteById(deviceId);
+        log.info("设备已删除: deviceId={}", deviceId);
     }
 
     /**

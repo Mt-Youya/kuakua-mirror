@@ -48,6 +48,7 @@
 | 方法  | 路径                                      | 请求体/参数                                                                           | 说明                                                               |
 | ----- | ----------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | POST  | `/api/v1/devices/{deviceId}/token/rotate` | —                                                                                     | 使用当前有效 Token 轮换 Token；响应中的新 Token 立即替代旧 Token。 |
+| DELETE | `/api/v1/devices/{deviceId}`             | —                                                                                     | 删除设备、配置、日志、心跳、OTA、对话、激活码、图片和未过期临时音频；成功返回 `204`。 |
 | GET   | `/api/v1/devices/{deviceId}/config`       | —                                                                                     | 获取音量、亮度、唤醒词、语言、时区、自动更新设置。                 |
 | PATCH | `/api/v1/devices/{deviceId}/config`       | 任意要更新的 `volume`、`brightness`、`wakeWord`、`language`、`timezone`、`autoUpdate` | 局部更新配置。                                                     |
 | POST  | `/api/v1/devices/{deviceId}/heartbeat`    | `uptime`、`memoryUsage`、`cpuUsage`、`temperature` 可选                               | 更新在线状态并保留心跳 30 天。                                     |

@@ -59,6 +59,24 @@ public class DeviceArtifactService {
         return imageRepository.findByDeviceIdOrderByUploadedAtDesc(deviceId);
     }
 
+    @Transactional
+    public void deleteImages(String deviceId) {
+        List<DeviceImage> images = images(deviceId);
+        try {
+            for (DeviceImage image : images) {
+                if (image.getStorageBucket() != null && image.getStoragePath() != null) {
+                    storageService.delete(image.getStorageBucket(), image.getStoragePath());
+                }
+            }
+            imageRepository.deleteAll(images);
+        } catch (Exception exception) {
+            if (exception instanceof BusinessException businessException) {
+                throw businessException;
+            }
+            throw new BusinessException("ARTIFACT_STORAGE_UNAVAILABLE", "制品存储暂不可用");
+        }
+    }
+
     public String signedImageUrl(DeviceImage image) {
         return storageService.signedDownloadUrl(image.getStorageBucket(), image.getStoragePath(), 600);
     }
