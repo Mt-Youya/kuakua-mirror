@@ -54,6 +54,25 @@ public class DeviceController {
     }
 
     /**
+     * 轮换设备 Token
+     * POST /api/v1/devices/{deviceId}/token/rotate
+     */
+    @PostMapping("/{deviceId}/token/rotate")
+    public ResponseEntity<ApiResponse<DeviceActivateResponse>> rotateDeviceToken(
+            @PathVariable String deviceId,
+            @AuthenticationPrincipal Device device) {
+        owned(device, deviceId);
+
+        DeviceActivateResponse response = DeviceActivateResponse.builder()
+                .deviceId(deviceId)
+                .token(deviceService.rotateDeviceToken(deviceId))
+                .message("设备Token已轮换")
+                .build();
+
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    /**
      * 获取设备配置
      * GET /api/v1/devices/{deviceId}/config
      */

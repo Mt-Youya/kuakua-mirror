@@ -1,6 +1,6 @@
 # KuaKua Mirror Device Simulator
 
-智能镜子设备模拟器 - 用于Backend/Frontend联调，无需等待真实硬件。
+智能镜子设备模拟器 - 用于Backend/Web联调，无需等待真实硬件。
 
 ## 功能特性
 
@@ -174,7 +174,7 @@ POST /api/v1/devices/activate
 - [ ] 设备会话管理正常
 - [ ] Bearer Token认证正常
 
-### Frontend验证（待实现）
+### Web验证（待实现）
 - [ ] 实时显示设备在线状态
 - [ ] 显示设备信息（deviceId, firmware）
 - [ ] 显示实时事件流（hello/status/face）

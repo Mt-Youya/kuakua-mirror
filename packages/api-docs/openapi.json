@@ -54,6 +54,19 @@
         }
       }
     },
+    "/api/v1/devices/{deviceId}/token/rotate": {
+      "post": {
+        "tags": ["设备"],
+        "summary": "轮换设备 Token",
+        "description": "仅持有当前有效 Token 的同一设备可以调用。成功后旧 Token 立即失效；设备必须先将响应中的新 Token 持久化，再使用它发起后续请求。",
+        "parameters": [{ "$ref": "#/components/parameters/DeviceId" }],
+        "security": [{ "DeviceToken": [] }],
+        "responses": {
+          "200": { "description": "新 Token；data 包含 deviceId、token 与 message。", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActivationResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
     "/api/v1/devices/{deviceId}/config": {
       "get": {
         "tags": ["设备"],

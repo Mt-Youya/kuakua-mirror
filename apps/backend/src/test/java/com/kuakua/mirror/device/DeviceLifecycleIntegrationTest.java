@@ -70,6 +70,22 @@ class DeviceLifecycleIntegrationTest {
                         .header("Authorization", "Bearer invalid"))
                 .andExpect(status().isUnauthorized());
 
+        var rotation = mockMvc.perform(post("/api/v1/devices/" + firstDevice.getDeviceId() + "/token/rotate")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.deviceId").value(firstDevice.getDeviceId()))
+                .andExpect(jsonPath("$.data.token").exists())
+                .andReturn();
+        String rotatedToken = rotation.getResponse().getContentAsString().replaceFirst("(?s).*\\\"token\\\"\\s*:\\s*\\\"([^\\\"]+)\\\".*", "$1");
+
+        mockMvc.perform(get("/api/v1/devices/" + firstDevice.getDeviceId() + "/config")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/devices/" + firstDevice.getDeviceId() + "/config")
+                        .header("Authorization", "Bearer " + rotatedToken))
+                .andExpect(status().isOk());
+        token = rotatedToken;
+
         mockMvc.perform(multipart("/api/v1/devices/" + firstDevice.getDeviceId() + "/images")
                         .file(new MockMultipartFile("file", "not-an-image.txt", "text/plain", "no".getBytes()))
                         .header("Authorization", "Bearer " + token))

@@ -18,43 +18,6 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  apps/frontend:
-    dependencies:
-      next:
-        specifier: ^16.3.3
-        version: 16.3.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react:
-        specifier: ^19.2.8
-        version: 19.2.8
-      react-dom:
-        specifier: ^19.2.8
-        version: 19.2.8(react@19.2.8)
-    devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4.3.3
-        version: 4.3.3
-      '@types/node':
-        specifier: ^26.4.0
-        version: 26.4.0
-      '@types/react':
-        specifier: ^19.2.18
-        version: 19.2.18
-      '@types/react-dom':
-        specifier: ^19.2.5
-        version: 19.2.5(@types/react@19.2.18)
-      autoprefixer:
-        specifier: ^10.5.4
-        version: 10.5.4(postcss@8.5.26)
-      postcss:
-        specifier: ^8.5.26
-        version: 8.5.26
-      tailwindcss:
-        specifier: ^4.3.3
-        version: 4.3.3
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
-
   apps/mobile:
     dependencies:
       '@react-navigation/native':
@@ -197,6 +160,43 @@ importers:
       tsconfig-paths:
         specifier: ^4.2.0
         version: 4.2.0
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+
+  apps/web:
+    dependencies:
+      next:
+        specifier: ^16.3.3
+        version: 16.3.3(@babel/core@7.29.7(supports-color@8.1.1))(@types/node@26.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.3.3
+        version: 4.3.3
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.0
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.2.5
+        version: 19.2.5(@types/react@19.2.18)
+      autoprefixer:
+        specifier: ^10.5.4
+        version: 10.5.4(postcss@8.5.26)
+      postcss:
+        specifier: ^8.5.26
+        version: 8.5.26
+      tailwindcss:
+        specifier: ^4.3.3
+        version: 4.3.3
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -2080,11 +2080,11 @@ packages:
       '@react-native-community/cli-server-api':
         optional: true
 
-  '@react-native/debugger-frontend@0.76.5':
+  '@react-native/debugger-web@0.76.5':
     resolution: {integrity: sha512-5gtsLfBaSoa9WP8ToDb/8NnDBLZjv4sybQQj7rDKytKOdsXm3Pr2y4D7x7GQQtP1ZQRqzU0X0OZrhRz9xNnOqA==}
     engines: {node: '>=18'}
 
-  '@react-native/debugger-frontend@0.76.9':
+  '@react-native/debugger-web@0.76.9':
     resolution: {integrity: sha512-0Ru72Bm066xmxFuOXhhvrryxvb57uI79yDSFf+hxRpktkC98NMuRenlJhslMrbJ6WjCu1vOe/9UjWNYyxXTRTA==}
     engines: {node: '>=18'}
 
@@ -5943,7 +5943,6 @@ packages:
 
   tailwindcss@4.3.3:
     resolution: {integrity: sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ==}
-    hasBin: true
 
   tapable@2.3.3:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
@@ -8930,14 +8929,14 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@react-native/debugger-frontend@0.76.5': {}
+  '@react-native/debugger-web@0.76.5': {}
 
-  '@react-native/debugger-frontend@0.76.9': {}
+  '@react-native/debugger-web@0.76.9': {}
 
   '@react-native/dev-middleware@0.76.5(supports-color@8.1.1)':
     dependencies:
       '@isaacs/ttlcache': 1.4.1
-      '@react-native/debugger-frontend': 0.76.5
+      '@react-native/debugger-web': 0.76.5
       chrome-launcher: 0.15.2(supports-color@8.1.1)
       chromium-edge-launcher: 0.2.0(supports-color@8.1.1)
       connect: 3.7.0(supports-color@8.1.1)
@@ -8955,7 +8954,7 @@ snapshots:
   '@react-native/dev-middleware@0.76.9(supports-color@8.1.1)':
     dependencies:
       '@isaacs/ttlcache': 1.4.1
-      '@react-native/debugger-frontend': 0.76.9
+      '@react-native/debugger-web': 0.76.9
       chrome-launcher: 0.15.2(supports-color@8.1.1)
       chromium-edge-launcher: 0.2.0(supports-color@8.1.1)
       connect: 3.7.0(supports-color@8.1.1)

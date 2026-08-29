@@ -53,7 +53,7 @@ curl http://localhost:8080/api/health
 
 **启动前端（Next.js）：**
 ```bash
-cd frontend
+cd web
 npm install
 npm run dev
 # 访问 http://localhost:3000
@@ -158,7 +158,7 @@ kill -9 <PID>
 
 **解决**：
 1. 确认后端已启动：`curl http://localhost:8080/api/health`
-2. 检查前端配置：`frontend/lib/api.ts` 中的 API_URL
+2. 检查前端配置：`web/lib/api.ts` 中的 API_URL
 3. 移动端需要使用局域网 IP，不能用 localhost
 
 ## 📚 详细文档
@@ -183,7 +183,7 @@ kill -9 <PID>
 cd backend && ./mvnw spring-boot:run
 
 # 前端
-cd frontend && npm run dev
+cd web && npm run dev
 
 # 移动端
 cd mobile && npx expo start

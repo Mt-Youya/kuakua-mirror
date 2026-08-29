@@ -140,6 +140,19 @@ public class DeviceService {
     }
 
     /**
+     * 使用仍有效的设备 Token 签发替换 Token。
+     */
+    @Transactional
+    public String rotateDeviceToken(String deviceId) {
+        Device device = getDevice(deviceId);
+        String deviceToken = newToken();
+        device.setDeviceTokenHash(FactoryProvisioningService.hash(deviceToken));
+        deviceRepository.save(device);
+        log.info("设备Token已轮换: deviceId={}", deviceId);
+        return deviceToken;
+    }
+
+    /**
      * 获取设备信息
      */
     public Device getDevice(String deviceId) {

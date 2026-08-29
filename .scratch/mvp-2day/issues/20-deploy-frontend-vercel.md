@@ -8,7 +8,7 @@
 
 **Acceptance criteria:**
 
-- [ ] 在 Vercel 创建新项目（从 GitHub 仓库部署，选择 `frontend/` 目录）
+- [ ] 在 Vercel 创建新项目（从 GitHub 仓库部署，选择 `web/` 目录）
 - [ ] 配置环境变量：`NEXT_PUBLIC_API_URL=https://kuakua-mirror.railway.app`
 - [ ] Vercel 自动构建并部署，获取公网地址（如 `https://kuakua-mirror.vercel.app`）
 - [ ] 访问首页，产品介绍正常显示，"查看演示"按钮可点击

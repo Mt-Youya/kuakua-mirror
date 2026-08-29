@@ -1,9 +1,9 @@
-# Frontend - KuaKua Mirror 前端项目
+# Web - KuaKua Mirror 前端项目
 
 ## 项目结构
 
 ```
-frontend/
+web/
 ├── app/                    # Next.js App Router 目录
 │   ├── layout.tsx         # 根布局
 │   ├── page.tsx           # 首页
@@ -30,7 +30,7 @@ frontend/
 ## 安装依赖
 
 ```bash
-cd frontend
+cd web
 npm install
 # 或使用 pnpm
 pnpm install

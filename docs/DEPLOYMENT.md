@@ -150,7 +150,7 @@ JWT_SECRET=your_jwt_secret_at_least_32_characters_long_random_string
 JWT_EXPIRATION=604800000
 
 # WebSocket 配置
-WEBSOCKET_ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app,http://localhost:3000
+WEBSOCKET_ALLOWED_ORIGINS=https://your-web-domain.vercel.app,http://localhost:3000
 
 # 管理员密码
 ADMIN_PASSWORD=your_secure_admin_password
@@ -202,7 +202,7 @@ curl https://your-backend-url.railway.app/api/health
 创建前端环境变量文件（本地测试用）：
 
 ```bash
-cd frontend
+cd web
 cat > .env.local << EOF
 NEXT_PUBLIC_API_URL=https://your-backend-url.railway.app
 NEXT_PUBLIC_WS_URL=wss://your-backend-url.railway.app
@@ -218,7 +218,7 @@ EOF
 3. 导入 `kuakua-mirror` 仓库
 4. 配置项目：
    - **Framework Preset**: Next.js
-   - **Root Directory**: `frontend`
+   - **Root Directory**: `web`
    - **Build Command**: `pnpm build`（或 `npm run build`）
    - **Output Directory**: `.next`（默认）
    - **Install Command**: `pnpm install`（或 `npm install`）
@@ -232,15 +232,15 @@ npm i -g vercel
 # 登录
 vercel login
 
-# 部署（在 frontend 目录下）
-cd frontend
+# 部署（在 web 目录下）
+cd web
 vercel
 
 # 按提示配置项目
 # - Set up and deploy: Yes
 # - Which scope: 选择你的账号
 # - Link to existing project: No
-# - Project name: kuakua-mirror-frontend
+# - Project name: kuakua-mirror-web
 # - In which directory: ./
 # - Want to override settings: No
 ```
@@ -290,7 +290,7 @@ WEBSOCKET_ALLOWED_ORIGINS=https://your-vercel-app.vercel.app,https://app.kuakua-
 
 ### 7. 验证部署
 
-1. 访问 Vercel 提供的 URL（如 `https://kuakua-mirror-frontend.vercel.app`）
+1. 访问 Vercel 提供的 URL（如 `https://kuakua-mirror-web.vercel.app`）
 2. 检查浏览器控制台，确认无 CORS 错误
 3. 测试后端 API 连接
 
@@ -1163,7 +1163,7 @@ sentry:
 
 **前端集成**:
 ```bash
-cd frontend
+cd web
 pnpm add @sentry/nextjs
 npx @sentry/wizard -i nextjs
 ```
@@ -1191,7 +1191,7 @@ fi
 if ! curl -f -s "${FRONTEND_URL}" > /dev/null; then
     curl -X POST "${WEBHOOK_URL}" \
         -H 'Content-Type: application/json' \
-        -d "{\"text\":\"⚠️ Frontend is DOWN: ${FRONTEND_URL}\"}"
+        -d "{\"text\":\"⚠️ Web is DOWN: ${FRONTEND_URL}\"}"
 fi
 ```
 
@@ -1214,7 +1214,7 @@ jobs:
         run: |
           curl -f ${{ secrets.BACKEND_URL }}/api/health || exit 1
       
-      - name: Check Frontend
+      - name: Check Web
         run: |
           curl -f ${{ secrets.FRONTEND_URL }} || exit 1
 ```
@@ -1469,7 +1469,7 @@ logging:
 cd backend
 ./mvnw versions:display-dependency-updates
 
-cd frontend
+cd web
 pnpm outdated
 
 # 检查安全漏洞
@@ -1490,7 +1490,7 @@ updates:
     open-pull-requests-limit: 5
     
   - package-ecosystem: "npm"
-    directory: "/frontend"
+    directory: "/web"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
@@ -1586,7 +1586,7 @@ Error: Cannot find module 'next'
 ```
 
 **解决方案**:
-1. 确认 Root Directory 设置为 `frontend`
+1. 确认 Root Directory 设置为 `web`
 2. 检查 Install Command：
    - 如果使用 pnpm: `pnpm install`
    - 如果使用 npm: `npm install`
@@ -1752,7 +1752,7 @@ curl https://api.openai.com/v1/models \
 **症状**: Vercel 部署后，图片或其他静态资源无法加载
 
 **解决方案**:
-1. 静态资源应放在 `frontend/public` 目录
+1. 静态资源应放在 `web/public` 目录
 2. 访问路径使用 `/image.png` 而非 `/public/image.png`
 3. 检查文件名大小写（Linux 区分大小写）
 
@@ -1860,7 +1860,7 @@ console.log(process.env.NEXT_PUBLIC_API_URL)
 #### Vercel 前端部署
 
 - [ ] 创建新项目并连接 GitHub 仓库
-- [ ] 设置 Root Directory 为 `frontend`
+- [ ] 设置 Root Directory 为 `web`
 - [ ] 配置环境变量（NEXT_PUBLIC_API_URL 等）
 - [ ] 等待构建完成（2-3 分钟）
 - [ ] 访问部署 URL 测试
@@ -1922,7 +1922,7 @@ cd backend
 ./mvnw spring-boot:run
 
 # 启动前端（开发模式）
-cd frontend
+cd web
 pnpm dev
 
 # 构建后端
@@ -1930,7 +1930,7 @@ cd backend
 ./mvnw clean package -DskipTests
 
 # 构建前端
-cd frontend
+cd web
 pnpm build
 ```
 
@@ -1963,7 +1963,7 @@ npm i -g vercel
 vercel login
 
 # 部署
-cd frontend
+cd web
 vercel
 
 # 部署到生产环境
@@ -2133,4 +2133,4 @@ OpenAI API (AI 服务)
 - [API 文档](./API.md)
 - [架构设计](./ARCHITECTURE.md)
 - [开发指南](../backend/README.md)
-- [前端文档](../frontend/README.md)
+- [前端文档](../web/README.md)

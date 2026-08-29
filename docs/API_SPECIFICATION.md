@@ -8,10 +8,10 @@
 | --- | --- |
 | 健康、版本、激活 | 无 |
 | `/api/v1/devices/{deviceId}/**` | `Authorization: Bearer <DeviceToken>` |
-| `/api/praise/stream`、`/api/chat/stream`、`/api/tts` | `Authorization: Bearer <DeviceToken>`、`X-Device-ID: <deviceId>` |
+| `/api/v1/praise/stream`、`/api/v1/chat/stream`、`/api/v1/tts` | `Authorization: Bearer <DeviceToken>`、`X-Device-ID: <deviceId>` |
 | `/audio/{filename}` | `Authorization: Bearer <DeviceToken>` |
 
-`DeviceToken` 只在激活成功时返回一次。Token 缺失、无效，或访问其他设备资源时均返回 `401`。设备管理接口成功响应统一为：
+`DeviceToken` 在激活或轮换成功时返回。它没有固定过期时间；Token 缺失、无效，或访问其他设备资源时均返回 `401`。设备管理接口成功响应统一为：
 
 ```json
 {"success":true,"data":{},"timestamp":"2026-08-29T06:00:00Z"}
@@ -47,6 +47,7 @@
 
 | 方法 | 路径 | 请求体/参数 | 说明 |
 | --- | --- | --- | --- |
+| POST | `/api/v1/devices/{deviceId}/token/rotate` | — | 使用当前有效 Token 轮换 Token；响应中的新 Token 立即替代旧 Token。 |
 | GET | `/api/v1/devices/{deviceId}/config` | — | 获取音量、亮度、唤醒词、语言、时区、自动更新设置。 |
 | PATCH | `/api/v1/devices/{deviceId}/config` | 任意要更新的 `volume`、`brightness`、`wakeWord`、`language`、`timezone`、`autoUpdate` | 局部更新配置。 |
 | POST | `/api/v1/devices/{deviceId}/heartbeat` | `uptime`、`memoryUsage`、`cpuUsage`、`temperature` 可选 | 更新在线状态并保留心跳 30 天。 |
@@ -62,6 +63,15 @@
 ```json
 {"volume":60,"brightness":75,"autoUpdate":true}
 ```
+
+轮换 Token 时，路径里的 `{deviceId}` 必须等于当前 Token 对应的设备，且请求头携带旧 Token：
+
+```http
+POST /api/v1/devices/{deviceId}/token/rotate HTTP/1.1
+Authorization: Bearer <current-token>
+```
+
+收到 `data.token` 后，设备应先写入 NVS，再用新 Token 发起后续请求。若旧 Token 已丢失或无效，不能自动换取新 Token，必须使用恢复码调用激活接口。
 
 心跳示例：
 
@@ -94,9 +104,9 @@ OTA 检查成功时，`data` 包含：
 
 | 方法 | 路径 | 请求体 | 成功结果 |
 | --- | --- | --- | --- |
-| POST | `/api/praise/stream` | `device_id`、`image_base64`、可选 `timestamp` | SSE：`status`、`text`、可选 `audio`、`complete`。图片最大 500 KiB。 |
-| POST | `/api/chat/stream` | `device_id`、`audio_base64`、`session_id`、可选 `timestamp` | SSE：`status`、`asr_result`、`text`、可选 `audio`、`complete`。音频最大 1 MiB。 |
-| POST | `/api/tts` | `device_id`、`text`、可选 `voice`、`format` | JSON：`data.audio_url`、`duration`、`format`、`sample_rate`。文本 1–100 字符。 |
+| POST | `/api/v1/praise/stream` | `device_id`、`image_base64`、可选 `timestamp` | SSE：`status`、`text`、可选 `audio`、`complete`。图片最大 500 KiB。 |
+| POST | `/api/v1/chat/stream` | `device_id`、`audio_base64`、`session_id`、可选 `timestamp` | SSE：`status`、`asr_result`、`text`、可选 `audio`、`complete`。音频最大 1 MiB。 |
+| POST | `/api/v1/tts` | `device_id`、`text`、可选 `voice`、`format` | JSON：`data.audio_url`、`duration`、`format`、`sample_rate`。文本 1–100 字符。 |
 | GET | `/audio/{filename}` | — | 下载同一设备生成的 WAV 临时文件。 |
 
 音频仅保留在服务端本地 10 分钟；过期或不存在返回 `404`。模型流异常会以 SSE `error` 事件返回。

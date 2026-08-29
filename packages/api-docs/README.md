@@ -10,5 +10,5 @@
 ```bash
 pnpm --dir packages/api-docs validate
 mvn -f apps/backend/pom.xml process-resources
-pnpm --dir apps/frontend build
+pnpm --dir apps/web build
 ```

@@ -120,7 +120,7 @@ backend/src/main/java/com/kuakua/mirror/
 
 ### 前端代码
 ```
-frontend/
+web/
 ├── app/
 │   ├── page.tsx                    # 首页
 │   └── monitor/page.tsx            # 监控页面（SSE 集成）
@@ -176,7 +176,7 @@ mvn spring-boot:run
 ### 2. 启动前端
 
 ```bash
-cd /Users/yonjay/codes/hubs/kuakua-mirror/frontend
+cd /Users/yonjay/codes/hubs/kuakua-mirror/web
 npm install
 npm run dev
 # 访问 http://localhost:3000

@@ -1,7 +1,7 @@
 {
   "name": "@kuakua/device-simulator",
   "version": "0.0.1",
-  "description": "KuaKua Mirror Device Simulator - 模拟真实设备进行Backend/Frontend联调",
+  "description": "KuaKua Mirror Device Simulator - 模拟真实设备进行Backend/Web联调",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
