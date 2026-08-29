@@ -73,12 +73,6 @@ firmware:
     version: ${FIRMWARE_PUBLISH_VERSION:}
     notes: ${FIRMWARE_PUBLISH_NOTES:}
 
-# 音频配置
-audio:
-  format: pcm16
-  sample-rate: 24000
-  channels: 1
-
 # WebSocket 配置
 websocket:
   allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:*}

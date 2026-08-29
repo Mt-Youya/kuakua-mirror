@@ -22,9 +22,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.imageio.ImageIO;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +57,7 @@ public class K10Controller {
         validateDevice(device, deviceId, request.deviceId());
         byte[] image;
         try {
-            image = decode(request.imageBase64(), MAX_IMAGE_BYTES, "图片");
+            image = decodeJpeg(request.imageBase64());
         } catch (IllegalArgumentException exception) {
             return Flux.just(event(Map.of("type", "error", "message", exception.getMessage())));
         }
@@ -84,7 +89,7 @@ public class K10Controller {
         }
         byte[] audio;
         try {
-            audio = decode(request.audioBase64(), MAX_AUDIO_BYTES, "音频");
+            audio = decodeWav(request.audioBase64());
         } catch (IllegalArgumentException exception) {
             return Flux.just(event(Map.of("type", "error", "message", exception.getMessage())));
         }
@@ -164,6 +169,9 @@ public class K10Controller {
     }
 
     private StoredAudio storeAudio(String deviceId, byte[] audio) {
+        if (!isPcm16Mono16KhzWav(audio)) {
+            throw new IllegalStateException("语音合成未返回 16 kHz 单声道 PCM16 WAV");
+        }
         try {
             return audioStore.store(deviceId, audio);
         } catch (Exception exception) {
@@ -215,17 +223,43 @@ public class K10Controller {
         }
     }
 
-    private byte[] decode(String value, int maxBytes, String name) {
+    private byte[] decodeJpeg(String value) {
+        byte[] image = decodeBase64(value, MAX_IMAGE_BYTES, "图片");
+        if (image.length < 4 || image[0] != (byte) 0xFF || image[1] != (byte) 0xD8
+                || image[image.length - 2] != (byte) 0xFF || image[image.length - 1] != (byte) 0xD9) {
+            throw new IllegalArgumentException("图片必须是 JPEG");
+        }
+        try {
+            if (ImageIO.read(new ByteArrayInputStream(image)) == null) {
+                throw new IllegalArgumentException("图片必须是有效 JPEG");
+            }
+        } catch (IOException exception) {
+            throw new IllegalArgumentException("图片必须是有效 JPEG");
+        }
+        return image;
+    }
+
+    private byte[] decodeWav(String value) {
+        byte[] audio = decodeBase64(value, MAX_AUDIO_BYTES, "音频");
+        if (!isPcm16Mono16KhzWav(audio)) {
+            throw new IllegalArgumentException("音频必须是 16 kHz 单声道 PCM16 WAV");
+        }
+        return audio;
+    }
+
+    private byte[] decodeBase64(String value, int maxBytes, String name) {
         if (isBlank(value)) {
             throw new IllegalArgumentException(name + "不能为空");
         }
-        String base64 = value.startsWith("data:") ? value.substring(value.indexOf(',') + 1) : value;
-        if (base64.length() > ((maxBytes + 2) / 3) * 4) {
+        if (value.startsWith("data:")) {
+            throw new IllegalArgumentException(name + "必须为纯 Base64");
+        }
+        if (value.length() > ((maxBytes + 2) / 3) * 4) {
             throw new IllegalArgumentException(name + "过大");
         }
         final byte[] bytes;
         try {
-            bytes = Base64.getDecoder().decode(base64);
+            bytes = Base64.getDecoder().decode(value);
         } catch (IllegalArgumentException exception) {
             throw new IllegalArgumentException(name + "不是有效 Base64");
         }
@@ -233,6 +267,25 @@ public class K10Controller {
             throw new IllegalArgumentException(name + "过大");
         }
         return bytes;
+    }
+
+    private boolean isPcm16Mono16KhzWav(byte[] audio) {
+        if (audio.length < 44 || !hasChunk(audio, 0, "RIFF") || !hasChunk(audio, 8, "WAVE")
+                || !hasChunk(audio, 12, "fmt ") || !hasChunk(audio, 36, "data")) {
+            return false;
+        }
+        ByteBuffer header = ByteBuffer.wrap(audio).order(ByteOrder.LITTLE_ENDIAN);
+        return header.getShort(20) == 1 && header.getShort(22) == 1
+                && header.getInt(24) == 16000 && header.getShort(34) == 16;
+    }
+
+    private boolean hasChunk(byte[] value, int offset, String expected) {
+        for (int index = 0; index < expected.length(); index++) {
+            if (value[offset + index] != (byte) expected.charAt(index)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void validateDevice(Device device, String headerDeviceId, String bodyDeviceId) {
@@ -268,7 +321,7 @@ public class K10Controller {
         String sessionId() { return session_id; }
     }
 
-    public record TtsRequest(String device_id, String text, String voice, String format) {
+    public record TtsRequest(String device_id, String text) {
         String deviceId() { return device_id; }
     }
 

@@ -150,30 +150,30 @@
       "post": {
         "tags": ["百炼"],
         "summary": "图像夸夸 SSE",
-        "parameters": [{ "$ref": "#/components/parameters/DeviceHeader" }],
+        "parameters": [{ "$ref": "#/components/parameters/DeviceHeader" }, { "$ref": "#/components/parameters/K10ContentLength" }],
         "security": [{ "DeviceToken": [] }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PraiseRequest" } } } },
-        "responses": { "200": { "description": "text/event-stream：status、text、audio、complete 或 error" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "429": { "$ref": "#/components/responses/RateLimited" } }
+        "responses": { "200": { "description": "text/event-stream，严格顺序：status → 全部 text → audio → complete；audio.url 指向 PCM 16-bit little-endian、单声道、16 kHz WAV。" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "411": { "$ref": "#/components/responses/ContentLengthRequired" }, "413": { "$ref": "#/components/responses/RequestTooLarge" }, "429": { "$ref": "#/components/responses/RateLimited" } }
       }
     },
     "/api/chat/stream": {
       "post": {
         "tags": ["百炼"],
         "summary": "语音聊天 SSE",
-        "parameters": [{ "$ref": "#/components/parameters/DeviceHeader" }],
+        "parameters": [{ "$ref": "#/components/parameters/DeviceHeader" }, { "$ref": "#/components/parameters/K10ContentLength" }],
         "security": [{ "DeviceToken": [] }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChatRequest" } } } },
-        "responses": { "200": { "description": "text/event-stream：status、asr_result、text、audio、complete 或 error" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "429": { "$ref": "#/components/responses/RateLimited" } }
+        "responses": { "200": { "description": "text/event-stream，严格顺序：status → asr_result → status → 全部 text → audio → complete；audio.url 指向 PCM 16-bit little-endian、单声道、16 kHz WAV。" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "411": { "$ref": "#/components/responses/ContentLengthRequired" }, "413": { "$ref": "#/components/responses/RequestTooLarge" }, "429": { "$ref": "#/components/responses/RateLimited" } }
       }
     },
     "/api/tts": {
       "post": {
         "tags": ["百炼"],
         "summary": "文本转语音",
-        "parameters": [{ "$ref": "#/components/parameters/DeviceHeader" }],
+        "parameters": [{ "$ref": "#/components/parameters/DeviceHeader" }, { "$ref": "#/components/parameters/K10ContentLength" }],
         "security": [{ "DeviceToken": [] }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TtsRequest" } } } },
-        "responses": { "200": { "description": "临时 WAV 地址" }, "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "429": { "$ref": "#/components/responses/RateLimited" } }
+        "responses": { "200": { "description": "临时 PCM 16-bit little-endian、单声道、16 kHz WAV 地址；设备以 Bearer Token 下载。" }, "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "411": { "$ref": "#/components/responses/ContentLengthRequired" }, "413": { "$ref": "#/components/responses/RequestTooLarge" }, "429": { "$ref": "#/components/responses/RateLimited" } }
       }
     },
     "/audio/{filename}": {
@@ -192,12 +192,15 @@
     },
     "parameters": {
       "DeviceId": { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } },
-      "DeviceHeader": { "name": "X-Device-ID", "in": "header", "required": true, "schema": { "type": "string" } }
+      "DeviceHeader": { "name": "X-Device-ID", "in": "header", "required": true, "schema": { "type": "string" } },
+      "K10ContentLength": { "name": "Content-Length", "in": "header", "required": true, "description": "K10 模型接口的 JSON 请求体最大 1,500,000 字节。", "schema": { "type": "integer", "minimum": 1, "maximum": 1500000 } }
     },
     "responses": {
       "BadRequest": { "description": "请求不合法" },
       "Unauthorized": { "description": "DeviceToken 缺失、无效或设备归属不一致" },
       "RateLimited": { "description": "每设备模型调用超过 10 次/分钟" },
+      "ContentLengthRequired": { "description": "K10 模型接口必须提供 Content-Length" },
+      "RequestTooLarge": { "description": "K10 模型接口的 JSON 请求体超过 1,500,000 字节" },
       "StorageUnavailable": { "description": "私有对象存储不可用" }
     },
     "schemas": {
@@ -215,9 +218,9 @@
       "OtaCheck": { "type": "object", "properties": { "updateAvailable": { "type": "boolean" }, "version": { "type": "string" }, "downloadUrl": { "type": "string", "format": "uri" }, "fileSize": { "type": "integer", "format": "int64" }, "checksum": { "type": "string" }, "manifest": { "type": "string" }, "signature": { "type": "string" }, "releaseNotes": { "type": "string" } } },
       "OtaStatus": { "type": "object", "required": ["version", "status", "progress"], "properties": { "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }, "status": { "type": "string", "enum": ["downloading", "verifying", "installing", "success", "failed"] }, "progress": { "type": "integer", "minimum": 0, "maximum": 100 }, "error": { "type": "string" } } },
       "DiagnosticLog": { "type": "object", "required": ["level", "message", "metadata"], "properties": { "timestamp": { "type": "integer", "format": "int64" }, "level": { "type": "string", "enum": ["DEBUG", "INFO", "WARN", "ERROR"] }, "message": { "type": "string" }, "metadata": { "type": "object", "additionalProperties": true } } },
-      "PraiseRequest": { "type": "object", "required": ["device_id", "image_base64"], "properties": { "device_id": { "type": "string" }, "image_base64": { "type": "string" }, "timestamp": { "type": "integer", "format": "int64" } } },
-      "ChatRequest": { "type": "object", "required": ["device_id", "audio_base64", "session_id"], "properties": { "device_id": { "type": "string" }, "audio_base64": { "type": "string" }, "session_id": { "type": "string" }, "timestamp": { "type": "integer", "format": "int64" } } },
-      "TtsRequest": { "type": "object", "required": ["device_id", "text"], "properties": { "device_id": { "type": "string" }, "text": { "type": "string", "minLength": 1, "maxLength": 100 }, "voice": { "type": "string" }, "format": { "type": "string" } } }
+      "PraiseRequest": { "type": "object", "required": ["device_id", "image_base64"], "properties": { "device_id": { "type": "string" }, "image_base64": { "type": "string", "contentEncoding": "base64", "contentMediaType": "image/jpeg", "maxLength": 682668, "description": "无 Data URI 前缀、无换行的纯 JPEG Base64；解码后最大 500 KiB。" }, "timestamp": { "type": "integer", "format": "int64" } } },
+      "ChatRequest": { "type": "object", "required": ["device_id", "audio_base64", "session_id"], "properties": { "device_id": { "type": "string" }, "audio_base64": { "type": "string", "contentEncoding": "base64", "contentMediaType": "audio/wav", "maxLength": 1398104, "description": "无 Data URI 前缀、无换行的完整 RIFF/WAV：PCM 16-bit little-endian、单声道、16 kHz；解码后最大 1 MiB。" }, "session_id": { "type": "string" }, "timestamp": { "type": "integer", "format": "int64" } } },
+      "TtsRequest": { "type": "object", "required": ["device_id", "text"], "properties": { "device_id": { "type": "string" }, "text": { "type": "string", "minLength": 1, "maxLength": 100 } } }
     }
   }
 }

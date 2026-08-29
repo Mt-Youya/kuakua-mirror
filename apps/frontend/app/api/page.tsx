@@ -3,7 +3,7 @@ import apiSchema from "../../../../packages/api-docs/openapi.json";
 
 type Schema = {
   $ref?: string;
-  properties?: Record<string, unknown>;
+  properties?: Record<string, { description?: string }>;
 };
 
 type Operation = {
@@ -37,7 +37,9 @@ function requestFields(operation: Operation) {
   }
   const name = schema.$ref?.split("/").pop();
   const resolved = name ? document.components.schemas[name] : schema;
-  return Object.keys(resolved?.properties ?? {});
+  return Object.entries(resolved?.properties ?? {}).map(([name, property]) =>
+    property.description ? `${name}: ${property.description}` : name
+  );
 }
 
 const endpoints = Object.entries(document.paths).flatMap(([path, item]) =>
