@@ -32,3 +32,8 @@ coverage/
 
 # Misc
 .turbo/
+
+# Caches
+__pycache__
+_dev
+captures

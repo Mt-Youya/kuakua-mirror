@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#e9ecf0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>MIRROR ME · 夸夸镜</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; }
+
+        body {
+            width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; overflow-x: hidden;
+            background: #e9ecf0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            color: #2b2e34;
+            -webkit-font-smoothing: antialiased;
+        }
+        button { font-family: inherit; touch-action: manipulation; }
+
+        /* ===== 着陆页：主KV品牌页 ===== */
+        #camera-prompt {
+            position: fixed; inset: 0; z-index: 30;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 16px; padding: 32px 20px calc(44px + env(safe-area-inset-bottom));
+            background: radial-gradient(130% 100% at 50% -10%, #fbfcfd 0%, #eef1f4 42%, #dfe3e8 75%, #cfd4db 100%);
+            text-align: center;
+        }
+        #camera-prompt.hidden { display: none; }
+        .kv-wordmark {
+            font-size: clamp(18px, 5.2vw, 40px); font-weight: 200;
+            letter-spacing: .5em; text-indent: .5em; white-space: nowrap;
+            background: linear-gradient(170deg, #9aa0aa 0%, #6f757f 35%, #b8bdc6 60%, #828892 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; color: #878d97;
+        }
+        .kv-tagline { font-size: 13px; letter-spacing: .48em; text-indent: .48em; color: #a2a8b1; margin-top: -8px; }
+        .kv-dots { display: flex; gap: 10px; margin: 4px 0; }
+        .kv-dots i { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 1px 1px rgba(255,255,255,.85), 0 1px 3px rgba(60,70,90,.28); }
+        .kv-features { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; justify-content: center; width: 100%; padding: 0 12px; }
+        .kv-feat {
+            min-width: 92px; padding: 12px 10px 10px; border-radius: 16px;
+            background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.9);
+            box-shadow: 0 6px 18px rgba(90,100,120,.10); backdrop-filter: blur(8px);
+            display: flex; flex-direction: column; gap: 3px; align-items: center;
+        }
+        .kv-feat .fi { font-size: 15px; color: #9aa1ab; }
+        .kv-feat b { font-size: 13px; font-weight: 600; color: #3a3e46; letter-spacing: 2px; }
+        .kv-feat small { font-size: 10px; color: #9aa1ab; letter-spacing: 1px; }
+        #camera-prompt .subtitle { font-size: 13px; color: #8b919b; line-height: 1.7; max-width: 300px; }
+        #start-camera-btn {
+            margin-top: 6px; padding: 15px 50px; border-radius: 32px;
+            border: 1px solid rgba(255,255,255,.95);
+            background: linear-gradient(160deg, #ffffff 0%, #dfe3e9 38%, #b9bfc9 55%, #eef1f5 78%, #c6cbd4 100%);
+            color: #33373e; font-size: 15px; font-weight: 600; letter-spacing: 6px; text-indent: 6px;
+            cursor: pointer; box-shadow: 0 10px 26px rgba(90,100,120,.28), inset 0 1px 0 rgba(255,255,255,.9);
+            transition: transform .2s, box-shadow .2s;
+        }
+        #start-camera-btn:active { transform: scale(.97); }
+        .kv-foot { position: absolute; bottom: calc(14px + env(safe-area-inset-bottom)); left: 0; right: 0; font-size: 10px; letter-spacing: .35em; color: #b3b8c0; }
+
+        /* ===== 镜面画面（全屏 + 金属边框）===== */
+        #video-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #0d0e12; }
+        #video { display: none; }
+        #live-canvas { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        #mirror-frame {
+            position: fixed; inset: 8px; border-radius: 26px; pointer-events: none; z-index: 5;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.5), inset 0 0 0 4px rgba(214,219,227,.25), inset 0 0 60px rgba(255,255,255,.08);
+        }
+
+        /* ===== 顶部栏 ===== */
+        #top-bar {
+            position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 12px; right: 12px; z-index: 10;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 14px; border-radius: 18px;
+            background: rgba(246,248,250,.72); backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,.75); box-shadow: 0 4px 18px rgba(40,50,70,.12);
+        }
+        #logo { font-size: 12px; font-weight: 300; letter-spacing: .32em; color: #7c828c; }
+        #logo .edition { margin-left: 8px; font-size: 11px; letter-spacing: 2px; color: #4a4e56; font-weight: 600; }
+        #energy-display { display: none; }
+
+        #relationship-badge {
+            font-size: 11px; color: #5c6169; letter-spacing: 1px;
+            background: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.9);
+            padding: 4px 10px; border-radius: 12px;
+            opacity: 0; transition: opacity 0.5s;
+        }
+        #relationship-badge.visible { opacity: 1; }
+        #relationship-badge.stage-transition { animation: stagePulse 1.2s ease-out; }
+        @keyframes stagePulse {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.12); background: rgba(255,255,255,.95); }
+            100% { transform: scale(1); }
+        }
+
+        /* ===== 功能按钮（右上）===== */
+        #mute-btn, #mic-btn {
+            position: fixed; width: 40px; height: 40px; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,.85); background: rgba(246,248,250,.78);
+            backdrop-filter: blur(12px); color: #3a3e46; font-size: 16px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; z-index: 15; transition: all 0.2s;
+            top: calc(64px + env(safe-area-inset-top));
+        }
+        #mute-btn { right: 60px; }
+        #mic-btn { right: 12px; }
+        #mute-btn:active, #mic-btn:active { background: rgba(255,255,255,.95); }
+        #mute-btn.muted { background: rgba(214,90,90,.15); border-color: rgba(214,90,90,.45); }
+        #mic-btn.off { border-color: rgba(214,90,90,.45); background: rgba(214,90,90,.10); opacity: 0.9; }
+        #mic-btn.off::after {
+            content: ''; position: absolute; width: 26px; height: 2px;
+            background: rgba(214,90,90,.9); transform: rotate(-45deg); border-radius: 1px; pointer-events: none;
+        }
+        #voice-btn {
+            position: fixed; top: calc(64px + env(safe-area-inset-top)); right: 108px; z-index: 15;
+            height: 40px; padding: 0 16px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,.85); background: rgba(246,248,250,.78);
+            backdrop-filter: blur(12px); color: #3a3e46; font-size: 12px; letter-spacing: 2px; cursor: pointer;
+        }
+        #demo-btn { display: none; }
+        #mic-hint, #mute-hint {
+            position: fixed; top: calc(110px + env(safe-area-inset-top)); right: 12px;
+            font-size: 11px; color: #5c6169; background: rgba(246,248,250,.9);
+            border: 1px solid rgba(255,255,255,.85); padding: 5px 10px; border-radius: 10px; z-index: 15;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        #mic-hint.visible, #mute-hint.visible { opacity: 1; }
+
+        /* ===== 收音指示器 + 面板 ===== */
+        #ambient-indicator {
+            position: fixed; top: calc(64px + env(safe-area-inset-top)); left: 12px;
+            display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px;
+            border-radius: 20px; border: 1px solid rgba(255,255,255,.85);
+            background: rgba(246,248,250,.78); backdrop-filter: blur(12px); cursor: pointer; z-index: 15;
+        }
+        #ambient-indicator.hidden { display: none; }
+        .ambient-dot { width: 8px; height: 8px; border-radius: 50%; background: #7fbf8f; animation: ambientPulse 2s infinite; }
+        @keyframes ambientPulse { 0%, 100% { opacity: 0.5; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }
+        .ambient-label { font-size: 11px; color: #5c6169; letter-spacing: 1px; }
+
+        #ambient-panel {
+            position: fixed; top: calc(112px + env(safe-area-inset-top)); right: 12px;
+            width: min(320px, calc(100vw - 24px)); max-height: 60vh;
+            background: rgba(248,250,252,.94); backdrop-filter: blur(20px);
+            border-radius: 16px; border: 1px solid rgba(255,255,255,.9);
+            box-shadow: 0 12px 40px rgba(40,50,70,.25); z-index: 25;
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        #ambient-panel.hidden { opacity: 0; pointer-events: none; transform: translateY(-10px); }
+        .panel-header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid rgba(120,128,140,.12); }
+        .panel-title { font-size: 13px; font-weight: 600; color: #4a4e56; flex: 1; letter-spacing: 1px; }
+        .panel-clear {
+            font-size: 11px; color: #8b919b; background: none;
+            border: 1px solid rgba(120,128,140,.3); border-radius: 8px;
+            padding: 3px 10px; cursor: pointer; margin-right: 8px;
+        }
+        .panel-close { font-size: 18px; color: #8b919b; background: none; border: none; cursor: pointer; padding: 0 4px; }
+        .panel-body { flex: 1; overflow-y: auto; padding: 10px 14px; max-height: 44vh; }
+        .panel-body::-webkit-scrollbar { width: 4px; }
+        .panel-body::-webkit-scrollbar-thumb { background: rgba(120,128,140,.25); border-radius: 2px; }
+        .panel-empty { text-align: center; color: #9aa1ab; font-size: 13px; padding: 20px 0; }
+        .ambient-entry { padding: 8px 0; border-bottom: 1px solid rgba(120,128,140,.08); }
+        .ambient-entry:last-child { border-bottom: none; }
+        .ambient-time { font-size: 10px; color: #9aa1ab; margin-bottom: 3px; }
+        .ambient-text { font-size: 13px; color: #3a3e46; line-height: 1.5; }
+        .panel-footer { padding: 9px 14px; border-top: 1px solid rgba(120,128,140,.1); }
+        .panel-hint { font-size: 11px; color: #9aa1ab; }
+
+        /* ===== 夸夸气泡 ===== */
+        #praise-bubble {
+            position: fixed; top: calc(132px + env(safe-area-inset-top)); left: 50%;
+            transform: translateX(-50%) translateY(-16px);
+            width: min(520px, calc(100% - 32px));
+            background: rgba(248,250,252,.88); backdrop-filter: blur(18px);
+            border-radius: 22px; padding: 20px 22px;
+            border: 1px solid rgba(255,255,255,.9);
+            box-shadow: 0 12px 36px rgba(40,50,70,.22), inset 0 1px 0 #fff;
+            z-index: 20; opacity: 0; pointer-events: none;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        #praise-bubble.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+        #praise-bubble.thinking { background: rgba(248,250,252,.72); }
+        #praise-text { font-size: 17px; line-height: 1.9; letter-spacing: 1px; text-align: center; min-height: 32px; color: #2b2e34; font-weight: 500; }
+        #praise-text.streaming::after { content: '▊'; opacity: 0.5; animation: blink 0.8s infinite; margin-left: 2px; color: #8f96a2; }
+        @keyframes blink { 0%, 50% { opacity: 0.5; } 51%, 100% { opacity: 0; } }
+
+        .thinking-dots { display: inline-flex; gap: 6px; align-items: center; justify-content: center; }
+        .thinking-dots span {
+            width: 8px; height: 8px; background: #aeb4bf; border-radius: 50%;
+            animation: dotBounce 1.4s infinite ease-in-out both;
+        }
+        .thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes dotBounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ===== 底部操作区 ===== */
+        #bottom-area {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+            padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            background: linear-gradient(to top, rgba(233,236,240,.9) 0%, rgba(233,236,240,.45) 40%, rgba(233,236,240,0) 100%);
+            transition: opacity 0.6s ease;
+        }
+        #bottom-area.zen { opacity: 0.15; }
+        #bottom-area.zen:hover, #bottom-area.zen:focus-within { opacity: 1; }
+        #actions-row { display: flex; gap: 28px; align-items: flex-start; justify-content: center; }
+        .action-btn {
+            border: none; cursor: pointer; display: flex; flex-direction: column;
+            align-items: center; gap: 6px; background: transparent; color: #3a3e46; transition: transform 0.2s;
+        }
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn .icon-circle {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: linear-gradient(160deg, #ffffff 0%, #dfe3e9 40%, #b9bfc9 58%, #eef1f5 82%, #c6cbd4 100%);
+            border: 1px solid rgba(255,255,255,.95);
+            box-shadow: 0 6px 16px rgba(60,70,90,.22), inset 0 1px 0 #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 19px;
+        }
+        #again-btn .icon-circle { width: 64px; height: 64px; font-size: 24px; }
+        .action-btn .label { font-size: 10px; color: #5c6169; letter-spacing: 2px; }
+
+        #text-input {
+            width: min(380px, 100%); padding: 10px 18px; border-radius: 20px;
+            border: 1px solid rgba(150,158,170,.35); background: rgba(255,255,255,.72);
+            backdrop-filter: blur(10px); color: #2b2e34; font-size: 13px; outline: none;
+            text-align: center;
+        }
+        #text-input::placeholder { color: #9aa1ab; }
+        #text-input:focus { border-color: #8f96a2; background: #fff; }
+
+        /* ===== 刚拍的照片缩略图 ===== */
+        #capture-preview {
+            position: fixed; left: 12px; bottom: calc(180px + env(safe-area-inset-bottom)); z-index: 15;
+            opacity: 0; transform: translateY(10px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            pointer-events: none; text-align: center;
+        }
+        #capture-preview.visible { opacity: 1; transform: translateY(0); }
+        #capture-preview img {
+            width: 104px; border-radius: 12px; display: block;
+            border: 2px solid rgba(255,255,255,.95);
+            box-shadow: 0 8px 22px rgba(40,50,70,.3);
+        }
+        #capture-preview .cap-label {
+            margin-top: 6px; font-size: 10px; color: #5c6169;
+            background: rgba(255,255,255,.85); padding: 3px 10px; border-radius: 8px; display: inline-block;
+        }
+
+        /* ===== 状态角标 ===== */
+        #status-chip {
+            position: fixed; right: 10px; bottom: calc(6px + env(safe-area-inset-bottom)); z-index: 16;
+            font-size: 10px; font-family: ui-monospace, Consolas, monospace;
+            color: rgba(90,97,107,.55); background: rgba(255,255,255,.4);
+            padding: 3px 9px; border-radius: 10px; letter-spacing: 0.3px;
+            pointer-events: none;
+        }
+
+        .energy-pop {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 56px; color: #a63440; font-weight: bold; pointer-events: none;
+            animation: energyPop 1.8s ease-out forwards; z-index: 100;
+            text-shadow: 0 4px 20px rgba(166,52,64,0.35);
+        }
+        @keyframes energyPop {
+            0% { opacity: 0; transform: translate(-50%, -30%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            40% { transform: translate(-50%, -55%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -100%) scale(1); }
+        }
+
+        #flash-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: white; opacity: 0; pointer-events: none; z-index: 50;
+        }
+        #flash-overlay.flash { animation: flashAnim 0.5s ease-out; }
+        @keyframes flashAnim { 0% { opacity: 0; } 10% { opacity: 0.9; } 100% { opacity: 0; } }
+
+        @media (max-width: 400px) {
+            #praise-text { font-size: 16px; }
+            .kv-feat { min-width: 86px; }
+        }
+        @media (min-width: 768px) {
+            #mirror-frame { inset: 14px; border-radius: 34px; }
+            #praise-bubble { padding: 26px 30px; }
+            #praise-text { font-size: 19px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 着陆页：主KV品牌页 -->
+    <div id="camera-prompt">
+        <div class="kv-wordmark">MIRROR ME</div>
+        <div class="kv-tagline">看见自己 · 夸夸自己</div>
+        <div class="kv-dots">
+            <i style="background:#efe6d3;"></i>
+            <i style="background:#bcd2e0;"></i>
+            <i style="background:#f3cdc7;"></i>
+            <i style="background:#a63440;"></i>
+            <i style="background:#e08a33;"></i>
+        </div>
+        <div class="kv-features">
+            <div class="kv-feat"><span class="fi">◯</span><b>清晰镜面</b><small>真实不失真</small></div>
+            <div class="kv-feat"><span class="fi">✦</span><b>AI对话</b><small>懂你 也懂夸</small></div>
+            <div class="kv-feat"><span class="fi">∪</span><b>折叠磁吸</b><small>随身好携带</small></div>
+        </div>
+        <p class="subtitle">让镜子看看你，收下一段专属于此刻的温柔</p>
+        <button id="start-camera-btn">打开镜子</button>
+        <div class="kv-foot"># CARB.ID LAB</div>
+    </div>
+
+    <!-- 镜面画面 -->
+    <div id="video-container">
+        <video id="video" autoplay playsinline muted style="display:none;"></video>
+        <canvas id="live-canvas"></canvas>
+    </div>
+    <div id="mirror-frame"></div>
+    <div id="flash-overlay"></div>
+
+    <!-- 顶部栏 -->
+    <div id="top-bar">
+        <div id="logo">MIRROR ME<span class="edition">夸夸镜</span></div>
+        <div id="relationship-badge" title="你和镜子的关系阶段"></div>
+        <div id="energy-display">
+            <span>✦</span>
+            <span id="energy-value">0</span>
+        </div>
+    </div>
+
+    <!-- 收音指示器 -->
+    <button id="ambient-indicator" class="hidden" title="查看镜子收录的对话">
+        <span class="ambient-dot"></span>
+        <span class="ambient-label">在听</span>
+    </button>
+
+    <!-- 右上功能按钮 -->
+    <button id="voice-btn" title="切换音色：女声·芊悦 / 男声·晨煦">女声</button>
+    <button id="mute-btn" title="静音/取消静音">🔊</button>
+    <button id="mic-btn" title="收音中 · 点击停止收录对话">🎙️</button>
+    <div id="mute-hint">已静音 · 文字仍会显示</div>
+    <div id="mic-hint">已停止收音</div>
+
+    <!-- 夸夸气泡 -->
+    <div id="praise-bubble">
+        <p id="praise-text"></p>
+    </div>
+
+    <!-- 刚拍的照片缩略图 -->
+    <div id="capture-preview">
+        <img id="capture-preview-img" alt="刚拍的照片">
+        <div class="cap-label">这次夸的是这张 ↑</div>
+    </div>
+
+    <!-- 底部操作区 -->
+    <div id="bottom-area">
+        <input type="text" id="text-input" placeholder="想跟镜子说点什么？（可选，回车发送）" />
+        <div id="actions-row">
+            <button class="action-btn" id="again-btn" title="再夸一次">
+                <div class="icon-circle">✨</div>
+                <div class="label">再夸一次</div>
+            </button>
+            <button class="action-btn" id="capture-btn" title="拍下这一刻">
+                <div class="icon-circle">📷</div>
+                <div class="label">拍下这一刻</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- 收音面板 -->
+    <div id="ambient-panel" class="hidden">
+        <div class="panel-header">
+            <span class="panel-title">镜子听到的</span>
+            <button id="clear-ambient-btn" class="panel-clear">清空</button>
+            <button id="close-panel-btn" class="panel-close">×</button>
+        </div>
+        <div id="ambient-log" class="panel-body">
+            <p class="panel-empty">还没有收录到对话…</p>
+        </div>
+        <div class="panel-footer">
+            <span class="panel-hint">镜子会默默记住最近 10 分钟的对话</span>
+        </div>
+    </div>
+
+    <button id="demo-btn" title="演示模式">⚡ 演示模式</button>
+
+    <div id="status-chip">MIRROR ME · 加载中…</div>
+
+    <canvas id="capture-canvas" style="display:none;"></canvas>
+    <script>
+        console.log('%c[夸夸镜] 黑客松版 hackathon-1.0.0 —— 测试台同款管线 + 预计算池 + 全局防重复', 'color:#d4af37;font-weight:bold');
+
+        // ===== 状态 =====
+        let stream = null;
+        let isMuted = false;
+        let energy = parseInt(localStorage.getItem('kkmh_energy') || '0');
+        let isProcessing = false;
+        let currentPraise = '';
+        document.getElementById('energy-value').textContent = energy;
+
+        function generateId() { return 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
+        let sessionId = localStorage.getItem('kkmh_session_id') || generateId();
+        localStorage.setItem('kkmh_session_id', sessionId);
+        let conversationHistory = JSON.parse(localStorage.getItem('kkmh_conversations') || '[]');
+        let interactionCount = 0;
+        let relationshipStage = '';
+
+        let prevStage = '';
+        function updateRelationshipIndicator() {
+            const badge = document.getElementById('relationship-badge');
+            if (!relationshipStage || interactionCount === 0) { badge.classList.remove('visible'); return; }
+            const stageIcons = { '初见': '🌱', '熟悉': '🌿', '老友': '🌳' };
+            const icon = stageIcons[relationshipStage] || '✨';
+            badge.textContent = `${icon} ${relationshipStage} · 第${interactionCount}次`;
+            badge.classList.add('visible');
+            if (relationshipStage !== prevStage && prevStage !== '') {
+                badge.classList.add('stage-transition');
+                setTimeout(() => badge.classList.remove('stage-transition'), 1200);
+            }
+            prevStage = relationshipStage;
+        }
+
+        // ===== 状态角标 =====
+        let lastResultInfo = '';
+        function updateStatusChip() {
+            const chip = document.getElementById('status-chip');
+            chip.textContent = `MIRROR ME · 现场生成${lastResultInfo ? ' · ' + lastResultInfo : ''}`;
+        }
+
+        // ===== 打开摄像头 =====
+        document.getElementById('start-camera-btn').addEventListener('click', startCamera);
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: true
+                });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                await video.play();
+
+                const liveCanvas = document.getElementById('live-canvas');
+                function drawFrame() {
+                    if (!stream) return;
+                    if (video.videoWidth && video.videoHeight) {
+                        liveCanvas.width = video.videoWidth;
+                        liveCanvas.height = video.videoHeight;
+                        liveCanvas.getContext('2d').drawImage(video, 0, 0);
+                    }
+                    requestAnimationFrame(drawFrame);
+                }
+                drawFrame();
+
+                document.getElementById('camera-prompt').classList.add('hidden');
+                setTimeout(() => startAmbientListening(), 1000);
+                startPrecacheLoop();   // 摄像头一开就开始预跑，第一次点击也尽量不冷启动
+
+                const ready = await waitUntilReady();
+                if (ready) requestPraise();
+                else showCameraNotReady();
+            } catch (err) {
+                alert('无法打开摄像头，请确保浏览器有摄像头权限。\n\n' + err.message);
+            }
+        }
+
+        // ===== 等到镜子真的看见你 =====
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function isFrameAlive() {
+            const video = document.getElementById('video');
+            if (!video.videoWidth || video.paused || video.readyState < 3) return false;
+            const c = document.createElement('canvas');
+            c.width = 80; c.height = 60;
+            const ctx = c.getContext('2d');
+            try { ctx.drawImage(video, 0, 0, 80, 60); } catch (e) { return false; }
+            const data = ctx.getImageData(0, 0, 80, 60).data;
+            let sum = 0, min = 255, max = 0, brightPixels = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const v = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                sum += v;
+                if (v < min) min = v;
+                if (v > max) max = v;
+                if (v > 80) brightPixels++;
+            }
+            const avg = sum / (data.length / 4);
+            const contrast = max - min;
+            const brightRatio = brightPixels / (data.length / 4);
+            return avg > 30 && contrast > 40 && brightRatio > 0.15;
+        }
+
+        async function detectFaceOnce() {
+            if (!('FaceDetector' in window)) return null;
+            try {
+                const detector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+                const faces = await detector.detect(document.getElementById('video'));
+                return faces && faces.length > 0;
+            } catch (e) { return null; }
+        }
+
+        async function waitUntilReady() {
+            const video = document.getElementById('video');
+            const start = Date.now();
+            const HARD_TIMEOUT = 8000;
+            const MIN_STABLE = 2500;
+            const hasFaceDetector = 'FaceDetector' in window;
+            let blackFrameCount = 0;
+            showWaiting();
+            while (Date.now() - start < HARD_TIMEOUT) {
+                if (video.readyState < 3 || video.paused || video.videoWidth === 0) { await sleep(200); continue; }
+                const quickAvg = getFrameAvgBrightness();
+                if (quickAvg < 15) {
+                    blackFrameCount++;
+                    if (blackFrameCount >= 6) { hideWaiting(); return false; }
+                    await sleep(500); continue;
+                } else { blackFrameCount = 0; }
+                if (!isFrameAlive()) { await sleep(300); continue; }
+                if (hasFaceDetector) {
+                    const seen = await detectFaceOnce();
+                    if (seen === true) { hideWaiting(); return true; }
+                    if (seen === false) { await sleep(400); continue; }
+                }
+                if (Date.now() - start >= MIN_STABLE) { hideWaiting(); return true; }
+                await sleep(300);
+            }
+            hideWaiting();
+            return isFrameAlive();
+        }
+
+        function getFrameAvgBrightness() {
+            const video = document.getElementById('video');
+            if (!video.videoWidth) return 0;
+            const c = document.createElement('canvas');
+            c.width = 40; c.height = 30;
+            const ctx = c.getContext('2d');
+            try { ctx.drawImage(video, 0, 0, 40, 30); } catch (e) { return 0; }
+            const data = ctx.getImageData(0, 0, 40, 30).data;
+            let sum = 0;
+            for (let i = 0; i < data.length; i += 4) sum += (data[i] + data[i + 1] + data[i + 2]) / 3;
+            return sum / (data.length / 4);
+        }
+
+        function showWaiting() {
+            const bubble = document.getElementById('praise-bubble');
+            const text = document.getElementById('praise-text');
+            bubble.classList.add('thinking');
+            text.innerHTML = '<span style="opacity:.75;font-size:15px;letter-spacing:1px;">看看你自己 · · ·</span>';
+            bubble.classList.add('visible');
+        }
+        function hideWaiting() { /* showThinking 接管，避免闪烁 */ }
+
+        // ===== 帧工具 =====
+        function captureFrame() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('capture-canvas');
+            const MAX_W = 640;  // 640px：比 1280 快约 2.5s，细节足够
+            const scale = Math.min(1, MAX_W / (video.videoWidth || MAX_W));
+            canvas.width = Math.round(video.videoWidth * scale);
+            canvas.height = Math.round(video.videoHeight * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+        }
+
+        function frameSignature() {
+            const video = document.getElementById('video');
+            const c = document.createElement('canvas');
+            c.width = 16; c.height = 12;
+            const ctx = c.getContext('2d');
+            try { ctx.drawImage(video, 0, 0, 16, 12); } catch (e) { return null; }
+            const d = ctx.getImageData(0, 0, 16, 12).data;
+            const sig = new Array(192);
+            for (let i = 0; i < 192; i++) {
+                const j = i * 4;
+                sig[i] = (d[j] + d[j + 1] + d[j + 2]) / 3;
+            }
+            return sig;
+        }
+
+        function sigDiff(a, b) {
+            if (!a || !b) return 1;
+            let s = 0;
+            for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
+            return s / a.length / 255;
+        }
+
+        // ===== 核心：请求夸夸（服务端优先给池里现货，没有才跑实时）=====
+        async function requestPraise() {
+            if (isProcessing) return;
+            const video = document.getElementById('video');
+            if (!stream || !video.srcObject || video.paused || video.readyState < 3 || !video.videoWidth) {
+                showCameraNotReady(); return;
+            }
+            if (!isFrameAlive()) { showFrameNotReady(); return; }
+
+            isProcessing = true;
+            showThinking();
+            const t0 = Date.now();
+            try {
+                const imageBase64 = captureFrame();
+                showCapturePreviewSrc('data:image/jpeg;base64,' + imageBase64);
+                const textInput = document.getElementById('text-input');
+                const userInputText = textInput.value.trim();
+                const ambientText = ambientSinceLastPraise();
+
+                const response = await fetch('/api/praise', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: imageBase64,
+                        session_id: sessionId,
+                        user_input: userInputText,
+                        ambient_context: ambientText,
+                        sig: frameSignature(),
+                    })
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                currentPraise = data.praise;
+                showPraise(currentPraise);
+                textInput.value = '';
+                lastPraiseAt = Date.now();
+
+                if (data.session_id) sessionId = data.session_id;
+                interactionCount = data.interaction_count || interactionCount;
+                relationshipStage = data.relationship_stage || relationshipStage;
+                updateRelationshipIndicator();
+
+                const ms = (data.timings && data.timings.total_ms) || (Date.now() - t0);
+                const p1src = (data.timings && data.timings.p1_source === 'precache') ? '预跑' : '冷启动';
+                const waitMs = (data.timings && data.timings.wait_precache_ms) || 0;
+                const waitNote = waitMs >= 1000 ? '·等' + (waitMs / 1000).toFixed(1) + 's' : '';
+                lastResultInfo = (data.source === 'fallback' ? '兜底' : p1src + waitNote) + ' ' + (ms / 1000).toFixed(1) + 's';
+                updateStatusChip();
+
+                conversationHistory.push({
+                    ts: Date.now(), user_input: userInputText, praise: currentPraise,
+                    capture_file: data.capture_file || '', source: data.source,
+                });
+                if (conversationHistory.length > 30) conversationHistory = conversationHistory.slice(-30);
+                localStorage.setItem('kkmh_conversations', JSON.stringify(conversationHistory));
+                localStorage.setItem('kkmh_session_id', sessionId);
+
+                if (!isMuted) {
+                    if (data.audio_b64) playCachedAudio(data.audio_b64);
+                    else speak(currentPraise);
+                }
+            } catch (err) {
+                showPraiseError(err.message);
+            } finally {
+                isProcessing = false;
+                // 每条夸夸消耗一份看图结果 → 立即上报续跑，趁观众读字幕/听语音时备好下一条
+                lastPrecacheAcceptedAt = 0;
+                lastPrecacheSig = null;
+                precacheTick();
+            }
+        }
+
+        // ===== 照片缩略图（左下角闪现 3.5 秒）=====
+        let capturePreviewTimer = null;
+        function showCapturePreviewSrc(src) {
+            const box = document.getElementById('capture-preview');
+            const img = document.getElementById('capture-preview-img');
+            if (!box || !img || !src) return;
+            img.src = src;
+            box.classList.add('visible');
+            clearTimeout(capturePreviewTimer);
+            capturePreviewTimer = setTimeout(() => box.classList.remove('visible'), 3500);
+        }
+
+        // ===== 提速：P1 预跑上报（点击快 3 倍的关键）=====
+        // 每 3s 把最新画面上报给服务端，后台提前跑"看图"（同款模型同款提示词）。
+        // 服务端同一时刻只跑一条预跑（一条 6-10s），上报再勤也不多烧 API，
+        // 只是上一条跑完后最多 3s 就续上下一条 → 缓存几乎永远新鲜。
+        // 点夸夸时画面没变 → 直接跳过 6-10s 的看图，只剩 ~2s 的生成。
+        // 上报/预跑失败都不影响主流程：点击时自动回退到原来的完整管线。
+        const PRECACHE_INTERVAL_MS = 3000;
+        let precacheBusy = false;
+        let lastPrecacheSig = null;
+        let lastPrecacheAcceptedAt = 0;
+        let precacheTimer = null;
+
+        async function precacheTick() {
+            if (precacheBusy || isProcessing || document.hidden) return;
+            const video = document.getElementById('video');
+            if (!stream || !video.srcObject || video.paused || video.readyState < 3 || !video.videoWidth) return;
+            if (!isFrameAlive()) return;   // 画面里没人，不白烧 API
+            const sig = frameSignature();
+            if (!sig) return;
+            // 画面没变化 + 5s 内刚上报过 → 服务端那条预跑还在飞，跳过这轮
+            if (lastPrecacheSig && sigDiff(sig, lastPrecacheSig) < 0.01
+                && Date.now() - lastPrecacheAcceptedAt < 5000) return;
+            precacheBusy = true;
+            try {
+                const textInput = document.getElementById('text-input');
+                const resp = await fetch('/api/precache', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: captureFrame(),
+                        sig: sig,
+                        session_id: sessionId,
+                        ambient_context: ambientSinceLastPraise(),
+                        user_input: textInput ? textInput.value.trim() : '',
+                    })
+                });
+                const d = await resp.json();
+                if (d && d.accepted) {
+                    lastPrecacheAcceptedAt = Date.now();
+                    lastPrecacheSig = sig;
+                }
+            } catch (e) { /* 预跑失败不影响主流程 */ }
+            finally { precacheBusy = false; }
+        }
+
+        function startPrecacheLoop() {
+            if (precacheTimer) return;
+            precacheTick();
+            precacheTimer = setInterval(precacheTick, PRECACHE_INTERVAL_MS);
+        }
+
+        // ===== 演示模式：预计算池 =====
+        const POOL_TARGET = 5;
+        const AUTO_COOLDOWN_MS = 25000;   // 自动夸夸冷却
+        let demoMode = false;
+        let demoTimer = null;
+        let lastPraiseAt = 0;
+        let lastSentSig = null;
+        let instantBusy = false;
+        let poolStatus = { count: 0, target: POOL_TARGET, inflight: false, freshest_age: null, person_present: false };
+
+        async function precomputeTick() {
+            return; // 预计算池已废弃（完全对齐测试台：每次现场生成，不备货、不烧后台调用）
+        }
+
+        function maybeAutoPraise(sig) {
+            return; // 自动夸夸依赖备用池，池已废弃（完全对齐测试台）
+        }
+
+        function setDemoMode(on) {
+            demoMode = on;
+            const btn = document.getElementById('demo-btn');
+            btn.classList.toggle('on', on);
+            btn.textContent = on ? '⚡ 演示中' : '⚡ 演示模式';
+            if (on) {
+                lastSentSig = null;
+                precomputeTick();
+                demoTimer = setInterval(precomputeTick, 2500);
+            } else {
+                clearInterval(demoTimer);
+                demoTimer = null;
+            }
+        }
+
+        // 即时播放：只从池里取（服务端校验画面签名），取不到安静等下一轮
+        async function playInstant(sig) {
+            if (instantBusy || isProcessing) return;
+            instantBusy = true;
+            const t0 = Date.now();
+            try {
+                const resp = await fetch('/api/praise_instant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId, sig: sig })
+                });
+                const d = await resp.json();
+                if (!resp.ok || d.error) return;   // 池里没有相符的货，等下一轮
+
+                isProcessing = true;
+                currentPraise = d.praise;
+                showPraise(currentPraise);
+                showCapturePreviewSrc(d.capture_file ? '/captures/' + d.capture_file : '');
+                lastPraiseAt = Date.now();
+
+                if (d.session_id) sessionId = d.session_id;
+                interactionCount = d.interaction_count || interactionCount;
+                relationshipStage = d.relationship_stage || relationshipStage;
+                updateRelationshipIndicator();
+                poolStatus.count = Math.max(0, poolStatus.count - 1);
+                lastResultInfo = '⚡即时 ' + (Date.now() - t0) + 'ms';
+                updateStatusChip();
+
+                conversationHistory.push({ ts: Date.now(), user_input: '', praise: currentPraise, capture_file: d.capture_file || '', instant: true });
+                if (conversationHistory.length > 30) conversationHistory = conversationHistory.slice(-30);
+                localStorage.setItem('kkmh_conversations', JSON.stringify(conversationHistory));
+
+                if (!isMuted) {
+                    if (d.audio_b64) playCachedAudio(d.audio_b64);
+                    else speak(currentPraise);
+                }
+                console.log(`[即时播放] 按键→出声 ${Date.now() - t0}ms:`, currentPraise);
+            } catch (e) {
+                console.log('[即时播放] 失败:', e.message);
+            } finally {
+                instantBusy = false;
+                isProcessing = false;
+            }
+        }
+
+        function playCachedAudio(b64) {
+            stopSpeaking();
+            const bytes = atob(b64);
+            const arr = new Uint8Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+            const url = URL.createObjectURL(new Blob([arr], { type: 'audio/mpeg' }));
+            currentAudio = new Audio(url);
+            currentAudio.onended = () => URL.revokeObjectURL(url);
+            currentAudio.play();
+        }
+
+        // ===== 气泡显示 =====
+        function showThinking() {
+            const bubble = document.getElementById('praise-bubble');
+            const text = document.getElementById('praise-text');
+            bubble.classList.add('thinking');
+            text.innerHTML = '<span class="thinking-dots"><span></span><span></span><span></span></span>';
+            bubble.classList.add('visible');
+        }
+
+        function showPraise(txt) {
+            const bubble = document.getElementById('praise-bubble');
+            const textEl = document.getElementById('praise-text');
+            bubble.classList.remove('thinking');
+            textEl.classList.add('streaming');
+            bubble.classList.add('visible');
+            textEl.textContent = '';
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i >= txt.length) {
+                    clearInterval(interval);
+                    textEl.classList.remove('streaming');
+                    return;
+                }
+                textEl.textContent += txt[i];
+                i++;
+            }, 55);
+        }
+
+        function showPraiseError(msg) {
+            const bubble = document.getElementById('praise-bubble');
+            const textEl = document.getElementById('praise-text');
+            bubble.classList.remove('thinking');
+            textEl.classList.remove('streaming');
+            textEl.textContent = '镜子有点走神了（' + msg + '），点"再夸一次"试试。';
+            bubble.classList.add('visible');
+        }
+
+        function showFrameNotReady() {
+            const bubble = document.getElementById('praise-bubble');
+            const textEl = document.getElementById('praise-text');
+            bubble.classList.remove('thinking');
+            textEl.classList.remove('streaming');
+            textEl.textContent = '镜子还看不清你，靠近一点让我看看？';
+            bubble.classList.add('visible');
+        }
+
+        function showCameraNotReady() {
+            const bubble = document.getElementById('praise-bubble');
+            const textEl = document.getElementById('praise-text');
+            bubble.classList.remove('thinking');
+            textEl.classList.remove('streaming');
+            textEl.textContent = '摄像头好像没有正常工作，检查一下摄像头是否打开？准备好了点"再夸一次"。';
+            bubble.classList.add('visible');
+        }
+
+        // ===== 按钮们 =====
+        document.getElementById('again-btn').addEventListener('click', requestPraise);
+
+        document.getElementById('capture-btn').addEventListener('click', () => {
+            if (!stream) return;
+            const flash = document.getElementById('flash-overlay');
+            flash.classList.remove('flash');
+            void flash.offsetWidth;
+            flash.classList.add('flash');
+            const photos = JSON.parse(localStorage.getItem('kkmh_photos') || '[]');
+            photos.push({ time: Date.now(), praise: currentPraise });
+            if (photos.length > 30) photos.shift();
+            localStorage.setItem('kkmh_photos', JSON.stringify(photos));
+            energy++;
+            localStorage.setItem('kkmh_energy', energy.toString());
+            document.getElementById('energy-value').textContent = energy;
+            const pop = document.createElement('div');
+            pop.className = 'energy-pop';
+            pop.textContent = '✦ +1';
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 1800);
+        });
+
+        document.getElementById('text-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') requestPraise();
+        });
+
+        // ===== 音色切换 =====
+        const VOICE_OPTIONS = [
+            { id: 'Cherry', label: '女声' },
+            { id: 'Ethan', label: '男声' },
+        ];
+        let ttsVoice = localStorage.getItem('kkmh_voice') || 'Cherry';
+        if (!VOICE_OPTIONS.some(v => v.id === ttsVoice)) ttsVoice = 'Cherry';
+
+        function renderVoiceBtn() {
+            const cur = VOICE_OPTIONS.find(v => v.id === ttsVoice);
+            document.getElementById('voice-btn').textContent = cur.label;
+        }
+        document.getElementById('voice-btn').addEventListener('click', () => {
+            const i = VOICE_OPTIONS.findIndex(v => v.id === ttsVoice);
+            ttsVoice = VOICE_OPTIONS[(i + 1) % VOICE_OPTIONS.length].id;
+            localStorage.setItem('kkmh_voice', ttsVoice);
+            renderVoiceBtn();
+        });
+        renderVoiceBtn();
+
+        document.getElementById('demo-btn').addEventListener('click', () => setDemoMode(!demoMode));
+
+        // ===== TTS（服务端合成，失败回退浏览器）=====
+        let currentAudio = null;
+
+        async function speak(text) {
+            stopSpeaking();
+            try {
+                const resp = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, voice: ttsVoice })
+                });
+                if (!resp.ok) { speakFallback(text); return; }
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                currentAudio = new Audio(url);
+                currentAudio.onended = () => URL.revokeObjectURL(url);
+                await currentAudio.play();
+            } catch (e) {
+                speakFallback(text);
+            }
+        }
+
+        function speakFallback(text) {
+            if (!('speechSynthesis' in window)) return;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.9;
+            utterance.pitch = 1.1;
+            const voices = speechSynthesis.getVoices();
+            const zhVoice = voices.find(v => v.lang.includes('zh') && v.name.includes('Female'))
+                || voices.find(v => v.lang.includes('zh'));
+            if (zhVoice) utterance.voice = zhVoice;
+            speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeaking() {
+            if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+            if ('speechSynthesis' in window) speechSynthesis.cancel();
+        }
+
+        if ('speechSynthesis' in window) {
+            speechSynthesis.getVoices();
+            speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+        }
+
+        // ===== 静音 =====
+        document.getElementById('mute-btn').addEventListener('click', () => {
+            isMuted = !isMuted;
+            const btn = document.getElementById('mute-btn');
+            const hint = document.getElementById('mute-hint');
+            btn.textContent = isMuted ? '🔇' : '🔊';
+            btn.classList.toggle('muted', isMuted);
+            if (isMuted) {
+                stopSpeaking();
+                hint.classList.add('visible');
+                setTimeout(() => hint.classList.remove('visible'), 2500);
+            }
+        });
+
+        // ===== 收音开关 =====
+        function showMicHint(text) {
+            const hint = document.getElementById('mic-hint');
+            if (!hint) return;
+            hint.textContent = text;
+            hint.classList.add('visible');
+            setTimeout(() => hint.classList.remove('visible'), 2500);
+        }
+
+        function stopAmbientListening() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                try { mediaRecorder.stop(); } catch (e) {}
+            }
+            if (audioStream) {
+                audioStream.getTracks().forEach(t => t.stop());
+                audioStream = null;
+            }
+            audioChunks = [];
+            const ind = document.getElementById('ambient-indicator');
+            if (ind) ind.classList.add('hidden');
+            if (panelOpen) renderAmbientPanel();
+        }
+
+        document.getElementById('mic-btn').addEventListener('click', async () => {
+            micActive = !micActive;
+            const btn = document.getElementById('mic-btn');
+            if (micActive) {
+                btn.classList.remove('off');
+                btn.title = '收音中 · 点击停止收录对话';
+                showMicHint('已恢复收音');
+                await startAmbientListening();
+            } else {
+                btn.classList.add('off');
+                btn.title = '收音已停止 · 点击恢复收录对话';
+                stopAmbientListening();
+                showMicHint('已停止收音 · 对话不再被收录');
+            }
+        });
+
+        // ===== 静默收音（8秒分段 + 音量闸门 + 服务端转写）=====
+        let ambientBuffer = [];
+        const AMBIENT_WINDOW_MS = 10 * 60 * 1000;
+        let panelOpen = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let audioMimeType = '';
+        const RECORD_INTERVAL_MS = 8000;
+        let micActive = true;
+        let audioStream = null;
+
+        function getRecentAmbient(now) {
+            const cutoff = (now || Date.now()) - AMBIENT_WINDOW_MS;
+            return ambientBuffer.filter(e => e.ts >= cutoff).map(e => e.text).join(' ');
+        }
+
+        // 只取"上一次夸夸之后"新说的话喂给生成：没人说话=空对话=与测试台同条件
+        function ambientSinceLastPraise() {
+            const cutoff = Date.now() - AMBIENT_WINDOW_MS;
+            const from = Math.max(lastPraiseAt || 0, cutoff);
+            return ambientBuffer.filter(e => e.ts > from).map(e => e.text).join(' ');
+        }
+
+        function cleanupAmbientBuffer() {
+            const cutoff = Date.now() - AMBIENT_WINDOW_MS;
+            ambientBuffer = ambientBuffer.filter(e => e.ts >= cutoff);
+        }
+
+        async function startAmbientListening() {
+            if (!stream) return;
+            const audioTracks = stream.getAudioTracks();
+            if (audioTracks.length === 0) {
+                showToast('麦克风未授权，语音收录不可用', true);
+                return;
+            }
+            if (typeof MediaRecorder === 'undefined') {
+                showToast('浏览器不支持录音，语音收录不可用', true);
+                return;
+            }
+            // 独立音频流（绕过 Chrome Windows 混合流 MediaRecorder bug）
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (e) {
+                showToast('无法获取独立音频流: ' + e.message, true);
+                return;
+            }
+            const mimeCandidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+            audioMimeType = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || '';
+            try {
+                startRecordingCycle();
+                document.getElementById('ambient-indicator').classList.remove('hidden');
+                updateAmbientStatus('active');
+                showToast('镜子开始默默听你说话了，点右上角「在听」查看');
+            } catch (e) {
+                showToast('录音启动失败: ' + e.message, true);
+            }
+        }
+
+        function showToast(msg, isError) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);padding:10px 20px;background:' + (isError ? 'rgba(180,40,40,0.9)' : 'rgba(0,0,0,0.75)') + ';backdrop-filter:blur(10px);border-radius:16px;color:rgba(255,255,255,0.9);font-size:13px;z-index:50;opacity:0;transition:opacity 0.4s;pointer-events:none;max-width:85%;text-align:center;';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.style.opacity = '1', 100);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 5000);
+        }
+
+        // 音量闸门：安静段不送转写（防 whisper 静音幻觉）
+        const VOLUME_GATE_RMS = 0.01;
+        let ambientAudioCtx = null, ambientAnalyser = null, ambientSrcNode = null;
+        let ambientLevelTimer = null, ambientMaxRMS = 0;
+
+        function startVolumeGate() {
+            stopVolumeGate();
+            ambientMaxRMS = 0;
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx || !audioStream) return;
+                if (!ambientAudioCtx) ambientAudioCtx = new Ctx();
+                if (ambientAudioCtx.state === 'suspended') ambientAudioCtx.resume();
+                ambientSrcNode = ambientAudioCtx.createMediaStreamSource(audioStream);
+                ambientAnalyser = ambientAudioCtx.createAnalyser();
+                ambientAnalyser.fftSize = 1024;
+                ambientSrcNode.connect(ambientAnalyser);
+                const buf = new Float32Array(ambientAnalyser.fftSize);
+                ambientLevelTimer = setInterval(() => {
+                    ambientAnalyser.getFloatTimeDomainData(buf);
+                    let sum = 0;
+                    for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+                    const rms = Math.sqrt(sum / buf.length);
+                    if (rms > ambientMaxRMS) ambientMaxRMS = rms;
+                }, 200);
+            } catch (e) { /* 音量闸门失败不阻塞录音 */ }
+        }
+
+        function stopVolumeGate() {
+            if (ambientLevelTimer) { clearInterval(ambientLevelTimer); ambientLevelTimer = null; }
+            if (ambientSrcNode) { try { ambientSrcNode.disconnect(); } catch (e) {} ambientSrcNode = null; }
+            ambientAnalyser = null;
+            return ambientMaxRMS;
+        }
+
+        function startRecordingCycle() {
+            if (!audioStream || !audioStream.active || audioStream.getAudioTracks().length === 0) return;
+            audioChunks = [];
+            startVolumeGate();
+            try {
+                if (audioMimeType) {
+                    mediaRecorder = new MediaRecorder(audioStream, { mimeType: audioMimeType, audioBitsPerSecond: 128000 });
+                } else {
+                    mediaRecorder = new MediaRecorder(audioStream, { audioBitsPerSecond: 128000 });
+                }
+            } catch (e) { return; }
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) audioChunks.push(e.data);
+            };
+            mediaRecorder.onerror = (e) => console.log('[静默收音] 错误:', e.error || e);
+            mediaRecorder.onstop = async () => {
+                const maxRMS = stopVolumeGate();
+                if (maxRMS < VOLUME_GATE_RMS) {
+                    console.log('[静默收音] 音量过低(' + maxRMS.toFixed(4) + ')，跳过本段转写');
+                } else if (audioChunks.length > 0 && micActive) {
+                    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    await transcribeAudioChunk(blob);
+                }
+                if (micActive && audioStream && audioStream.active) {
+                    setTimeout(() => startRecordingCycle(), 500);
+                }
+            };
+
+            try {
+                mediaRecorder.start();
+            } catch (e) { return; }
+
+            setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            }, RECORD_INTERVAL_MS);
+        }
+
+        async function transcribeAudioChunk(blob) {
+            try {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64 = reader.result.split(',')[1];
+                    try {
+                        const resp = await fetch('/api/transcribe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ audio: base64, format: blob.type || 'audio/webm' })
+                        });
+                        const data = await resp.json();
+                        if (data.text && data.text.trim()) {
+                            const text = data.text.trim();
+                            ambientBuffer.push({ ts: Date.now(), text });
+                            cleanupAmbientBuffer();
+                            console.log('[静默收音] 收录:', text);
+                            if (panelOpen) renderAmbientPanel();
+                            updateAmbientIndicator();
+                        }
+                    } catch (e) {
+                        console.log('[静默收音] 转写请求失败:', e.message);
+                    }
+                };
+                reader.readAsDataURL(blob);
+            } catch (e) { /* ignore */ }
+        }
+
+        function updateAmbientIndicator() {
+            const indicator = document.getElementById('ambient-indicator');
+            const count = ambientBuffer.filter(e => e.ts >= Date.now() - AMBIENT_WINDOW_MS).length;
+            const label = indicator.querySelector('.ambient-label');
+            label.textContent = count > 0 ? `在听 · ${count}条` : '在听';
+        }
+
+        function updateAmbientStatus(status) {
+            const dot = document.querySelector('.ambient-dot');
+            const label = document.querySelector('.ambient-label');
+            if (status === 'active') {
+                dot.style.background = 'rgba(120, 220, 120, 0.8)';
+                dot.style.animation = 'ambientPulse 2s infinite';
+                updateAmbientIndicator();
+            } else if (status === 'disconnected') {
+                dot.style.background = 'rgba(255, 100, 100, 0.5)';
+                dot.style.animation = 'none';
+                label.textContent = '已断开';
+            }
+        }
+
+        function renderAmbientPanel() {
+            const log = document.getElementById('ambient-log');
+            const recent = ambientBuffer.filter(e => e.ts >= Date.now() - AMBIENT_WINDOW_MS);
+            if (recent.length === 0) {
+                log.innerHTML = '<p class="panel-empty">还没有收录到对话…</p>';
+                return;
+            }
+            log.innerHTML = recent.map(e => {
+                const time = new Date(e.ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                return `<div class="ambient-entry"><div class="ambient-time">${time}</div><div class="ambient-text">${e.text}</div></div>`;
+            }).reverse().join('');
+        }
+
+        document.getElementById('ambient-indicator').addEventListener('click', () => {
+            panelOpen = !panelOpen;
+            const panel = document.getElementById('ambient-panel');
+            if (panelOpen) { renderAmbientPanel(); panel.classList.remove('hidden'); }
+            else panel.classList.add('hidden');
+        });
+        document.getElementById('close-panel-btn').addEventListener('click', () => {
+            panelOpen = false;
+            document.getElementById('ambient-panel').classList.add('hidden');
+        });
+        document.getElementById('clear-ambient-btn').addEventListener('click', () => {
+            ambientBuffer = [];
+            renderAmbientPanel();
+            updateAmbientIndicator();
+        });
+
+        setInterval(cleanupAmbientBuffer, 60000);
+        updateStatusChip();
+
+        // ===== 闲置自动隐去底部控件，减少遮挡 =====
+        (function () {
+            const ba = document.getElementById('bottom-area');
+            let t = null;
+            function wake() {
+                ba.classList.remove('zen');
+                clearTimeout(t);
+                t = setTimeout(() => ba.classList.add('zen'), 5000);
+            }
+            ['touchstart', 'pointerdown', 'mousemove', 'keydown'].forEach(ev =>
+                document.addEventListener(ev, wake, { passive: true }));
+            wake();
+        })();
+    </script>
+</body>
+</html>
