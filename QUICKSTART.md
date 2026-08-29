@@ -3,11 +3,13 @@
 ## 📋 前置要求
 
 ### 必须
+
 - **Java 21+** - 后端运行环境
 - **Node.js 18+** - 前端和移动端开发
 - **Maven 3.9+** - Java 构建工具（或使用 Maven Wrapper）
 
 ### 可选
+
 - **Docker** - 容器化部署
 - **Expo Go APP** - 移动端测试（iOS/Android）
 
@@ -52,6 +54,7 @@ curl http://localhost:8080/api/health
 ### 第 3 步：启动前端和移动端
 
 **启动前端（Next.js）：**
+
 ```bash
 cd web
 npm install
@@ -60,6 +63,7 @@ npm run dev
 ```
 
 **启动移动端（Expo）：**
+
 ```bash
 cd mobile
 npm install
@@ -122,6 +126,7 @@ curl -X POST http://localhost:8080/api/conversations/YOUR_SESSION_ID/messages \
 **错误**：`Unsupported class file major version 65`
 
 **解决**：
+
 ```bash
 # 检查版本
 java -version
@@ -135,6 +140,7 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
 **错误**：`401 Unauthorized`
 
 **解决**：
+
 1. 访问 https://platform.openai.com/api-keys
 2. 创建新的 API Key
 3. 更新 `backend/.env` 文件
@@ -144,6 +150,7 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
 **错误**：`Port 8080 is already in use`
 
 **解决**：
+
 ```bash
 # 查找占用端口的进程
 lsof -i :8080
@@ -157,6 +164,7 @@ kill -9 <PID>
 **错误**：`CORS error` 或 `Connection refused`
 
 **解决**：
+
 1. 确认后端已启动：`curl http://localhost:8080/api/health`
 2. 检查前端配置：`web/lib/api.ts` 中的 API_URL
 3. 移动端需要使用局域网 IP，不能用 localhost

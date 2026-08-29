@@ -1,30 +1,30 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator"
 
 export class CreateConversationDto {
   @IsNotEmpty()
   @IsNumber()
-  momentId: number;
+  momentId: number
 }
 
 export class SendMessageDto {
   @IsNotEmpty()
   @IsString()
-  content: string;
+  content: string
 
   @IsOptional()
   @IsString()
-  audioUrl?: string;
+  audioUrl?: string
 
   @IsOptional()
   @IsNumber()
-  audioDurationSeconds?: number;
+  audioDurationSeconds?: number
 }
 
 export class MessageResponseDto {
-  id: number;
-  role: string;
-  content: string;
-  createdAt: Date;
-  audioUrl?: string;
-  audioDurationSeconds?: number;
+  id: number
+  role: string
+  content: string
+  createdAt: Date
+  audioUrl?: string
+  audioDurationSeconds?: number
 }

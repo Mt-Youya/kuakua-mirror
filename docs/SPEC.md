@@ -12,12 +12,14 @@
 投资人需要在 2 天内看到夸夸镜产品的可演示原型，证明核心技术可行性：一个折叠式智能镜子能够通过语音与用户进行自然对话，并且配套的手机 APP 和官网能够展示系统运行状态。
 
 当前状态：
+
 - 后端有 4,227 行代码但从未运行过，存在编译错误
 - 前端和移动端完全不存在（0 行代码）
 - 硬件固件有 demo 但未对接后端
 - 完整 PRD 定义了 8 个实体和 4 个功能模块，2 天内无法完成
 
 核心挑战：
+
 - 时间极度紧张（48 小时）
 - 多端开发（硬件 + 后端 + Web + 移动端）
 - 团队资源有限（3-4 人）
@@ -53,11 +55,13 @@ APP (Expo) ──[REST/WebSocket]─────────────┤
 ### 范围简化
 
 **保留**：
+
 - 实时对话（硬件 + APP）
 - 对话历史存储和查询
 - 设备连接管理
 
 **砍掉**（未来迭代）：
+
 - Moment/Praise/Theme/Milestone 领域
 - 用户认证和授权
 - 人格切换、MBTI 配置
@@ -151,6 +155,7 @@ APP (Expo) ──[REST/WebSocket]─────────────┤
    - 重命名自原有的 `Conversation` 实体，消除术语混淆
 
 **删除的实体**（Moment 领域）：
+
 - User（用户认证暂不做）
 - Moment、Praise、Theme、Milestone、UserMilestone、DailyReview（成长系统暂不做）
 
@@ -159,6 +164,7 @@ APP (Expo) ──[REST/WebSocket]─────────────┤
 基于 ADR-002，创建 `RealtimeConversation` 聚合根管理对话流程。
 
 **状态机**：
+
 ```
 LISTENING (音频输入中)
     ↓ audioInputCompleted()
@@ -172,6 +178,7 @@ COMPLETED (已完成)
 ```
 
 **职责**：
+
 - 缓冲音频数据直到输入结束
 - 协调 OpenAI Realtime API 调用
 - 发布领域事件（TranscriptionCompleted、ResponseGenerated 等）
@@ -179,10 +186,12 @@ COMPLETED (已完成)
 - 完成后持久化为 Message 记录
 
 **并发策略**：
+
 - 一个设备同时只能有一个 ACTIVE 的 RealtimeConversation
 - 用户按键打断时，自动终止旧对话并创建新对话
 
 **存储**：
+
 - 运行时：内存（ConcurrentHashMap）
 - 完成后：持久化为 Message 到数据库
 - 清理策略：COMPLETED 状态保留 5 分钟后清理
@@ -192,12 +201,14 @@ COMPLETED (已完成)
 基于 ADR-003，定义硬件与后端的简化 WebSocket 协议。
 
 **硬件 → 后端消息**：
+
 1. `device_info`：设备信息（连接时发送一次）
 2. `audio`：音频数据（Base64 编码）
 3. `audio_end`：音频输入结束
 4. `heartbeat`：心跳
 
 **后端 → 硬件消息**：
+
 1. `transcript`：转写文本（屏幕显示）
 2. `response_text`：AI 回复文本
 3. `audio_response`：音频数据（TTS 输出）
@@ -206,6 +217,7 @@ COMPLETED (已完成)
 6. `pong`：心跳响应
 
 **协议转换层**：
+
 - 创建 `DeviceProtocolAdapter` 服务
 - 负责硬件简化协议 ↔ OpenAI Realtime API 格式的双向转换
 - 硬件无需实现复杂的 OpenAI 协议，降低固件开发难度
@@ -311,7 +323,7 @@ CREATE TABLE messages (
     content TEXT NOT NULL,
     audio_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT NOW(),
-    
+
     FOREIGN KEY (session_id) REFERENCES conversation_sessions(session_id)
 );
 
@@ -326,6 +338,7 @@ CREATE INDEX idx_sessions_device ON conversation_sessions(device_id);
 #### REST API（APP 调用）
 
 **创建对话会话**
+
 ```http
 POST /api/conversations
 Content-Type: application/json
@@ -342,6 +355,7 @@ Response 201:
 ```
 
 **发送消息**
+
 ```http
 POST /api/conversations/sess_abc123/messages
 Content-Type: application/json
@@ -368,6 +382,7 @@ Response 200:
 ```
 
 **查询历史消息**
+
 ```http
 GET /api/conversations/sess_abc123/messages?limit=20
 
@@ -393,6 +408,7 @@ Response 200:
 #### SSE API（监控页面）
 
 **实时事件流**
+
 ```http
 GET /api/monitor/stream
 Accept: text/event-stream
@@ -420,6 +436,7 @@ data: {"deviceId": "mirror_001", "timestamp": "..."}
 ### 部署配置
 
 **Railway（后端）**：
+
 - Dockerfile 构建 Spring Boot 应用
 - 环境变量：
   - `OPENAI_API_KEY`
@@ -428,17 +445,20 @@ data: {"deviceId": "mirror_001", "timestamp": "..."}
 - 健康检查：`GET /api/health`
 
 **Vercel（前端）**：
+
 - `next build` 构建
 - 环境变量：
   - `NEXT_PUBLIC_API_URL`（Railway 后端地址）
 - 自动部署（推送到 main 分支）
 
 **Supabase（数据库）**：
+
 - PostgreSQL 15
 - 公网访问（通过连接字符串）
 - 初始化脚本：运行 Schema SQL
 
 **Expo**：
+
 - 开发模式：`expo start`
 - 投资人通过 Expo Go 扫码安装
 - 不打包成独立 APK/IPA（时间不够）
@@ -450,10 +470,12 @@ data: {"deviceId": "mirror_001", "timestamp": "..."}
 ### 测试原则
 
 **只测试外部行为，不测试实现细节**：
+
 - ✅ 测试：给定输入，验证输出和副作用（如数据库记录、发送的消息）
 - ❌ 不测试：私有方法、内部状态变化、调用了哪个依赖
 
 **测试层次**（从高到低）：
+
 1. **集成测试**（优先）：测试完整的业务流程，包含数据库和外部 API（mock）
 2. **单元测试**（补充）：测试复杂的领域逻辑（如状态机转换）
 3. **E2E 测试**（时间不够，跳过）：MVP 阶段手动测试
@@ -463,20 +485,22 @@ data: {"deviceId": "mirror_001", "timestamp": "..."}
 #### 1. RealtimeConversation 聚合根
 
 **测试什么**：
+
 - 状态机转换的合法性（如：不能在 LISTENING 状态调用 `transcriptionCompleted`）
 - 领域事件的发布（如：调用 `completeAudioInput` 后发布 `AudioInputCompleted` 事件）
 - 音频缓冲的正确性
 
 **测试示例**：
+
 ```java
 @Test
 void shouldTransitionToTranscribingWhenAudioInputCompleted() {
     var conversation = RealtimeConversation.create("conv_123");
     conversation.appendAudio(audioChunk1);
     conversation.appendAudio(audioChunk2);
-    
+
     conversation.completeAudioInput();
-    
+
     assertEquals(ConversationStatus.TRANSCRIBING, conversation.getStatus());
     verify(eventPublisher).publish(any(AudioInputCompleted.class));
 }
@@ -484,7 +508,7 @@ void shouldTransitionToTranscribingWhenAudioInputCompleted() {
 @Test
 void shouldThrowExceptionWhenTranscribingBeforeListening() {
     var conversation = RealtimeConversation.create("conv_123");
-    
+
     assertThrows(IllegalStateException.class, () -> {
         conversation.transcriptionCompleted("text");
     });
@@ -492,23 +516,26 @@ void shouldThrowExceptionWhenTranscribingBeforeListening() {
 ```
 
 **现有测试参考**：
+
 - 无（项目里没有测试），需要从零开始建立测试规范
 
 #### 2. DeviceProtocolAdapter
 
 **测试什么**：
+
 - 硬件消息正确转换为 OpenAI 消息
 - OpenAI 消息正确转换为硬件消息
 - 边界情况（如：空消息、未知类型）
 
 **测试示例**：
+
 ```java
 @Test
 void shouldTranslateDeviceAudioToOpenAIAppend() {
     var deviceMsg = DeviceMessage.audio("base64data");
-    
+
     var openAIMsg = adapter.translateToOpenAI(deviceMsg);
-    
+
     assertEquals("input_audio_buffer.append", openAIMsg.getType());
     assertEquals("base64data", openAIMsg.getAudio());
 }
@@ -517,29 +544,31 @@ void shouldTranslateDeviceAudioToOpenAIAppend() {
 #### 3. ConversationService 集成测试
 
 **测试什么**：
+
 - 创建对话会话后能查询到
 - 发送消息后正确保存到数据库
 - 查询历史消息按时间倒序返回
 
 **测试示例**：
+
 ```java
 @SpringBootTest
 @Transactional
 class ConversationServiceIntegrationTest {
-    
+
     @Autowired
     private ConversationService service;
-    
+
     @Autowired
     private MessageRepository messageRepo;
-    
+
     @Test
     void shouldSaveMessagesWhenConversationCompletes() {
         var sessionId = service.createSession(null);
         service.sendMessage(sessionId, "Hello");
-        
+
         var messages = messageRepo.findBySessionId(sessionId);
-        
+
         assertEquals(2, messages.size());  // USER + ASSISTANT
         assertEquals("Hello", messages.get(0).getContent());
     }
@@ -547,6 +576,7 @@ class ConversationServiceIntegrationTest {
 ```
 
 **现有测试参考**：
+
 - 无，需要建立 Spring Boot 集成测试模板
 
 #### 4. 前端组件测试
@@ -554,28 +584,33 @@ class ConversationServiceIntegrationTest {
 **MVP 阶段跳过**：时间不够，手动测试。
 
 **未来补充**：
+
 - 监控页面：mock SSE 事件，验证消息正确渲染
 - 3D 组件：snapshot 测试
 
 #### 5. 手动测试清单
 
 **硬件对话流程**：
+
 1. 硬件连接后端，监控页面显示"设备已连接"
 2. 按键说话 → 屏幕显示转写文字
 3. AI 回复 → 屏幕显示回复文字 + 扬声器播放语音
 4. 查询数据库，验证对话记录已保存
 
 **APP 对话流程**：
+
 1. 打开 APP，输入文字 → 发送
 2. 界面显示 AI 回复
 3. 上滑查看历史记录
 
 **监控页面**：
+
 1. 打开监控页面 → 显示在线设备
 2. 硬件对话时 → 实时显示消息
 3. 硬件断开 → 显示"设备已离线"
 
 **部署验证**：
+
 1. Railway 部署成功 → 访问健康检查接口返回 200
 2. Vercel 部署成功 → 访问官网首页正常加载
 3. Supabase 连接成功 → 查询数据库有表结构
@@ -587,6 +622,7 @@ class ConversationServiceIntegrationTest {
 以下功能**明确不在 MVP 范围内**，未来迭代再实现：
 
 ### 产品功能
+
 1. **Moment 系统**：用户说的话"留下"成为 Moment，关联主题、难度分
 2. **成长模块**：主题列表、里程碑、成长线路径、成长故事
 3. **回顾模块**：日报、周报、趋势图（难度分曲线）
@@ -597,6 +633,7 @@ class ConversationServiceIntegrationTest {
 8. **人脸存在感知**：检测人脸后亮屏/熄屏
 
 ### 技术功能
+
 9. **用户认证**：注册、登录、JWT token
 10. **多用户支持**：一个设备多个用户，用户识别
 11. **设备激活**：激活码、设备绑定用户
@@ -611,6 +648,7 @@ class ConversationServiceIntegrationTest {
 20. **AB 测试**：功能开关、灰度发布
 
 ### 部署和运维
+
 21. **CI/CD 流水线**：自动化测试、部署
 22. **多环境**：dev/staging/prod 环境隔离
 23. **数据库备份**：定期备份、灾难恢复
@@ -624,11 +662,13 @@ class ConversationServiceIntegrationTest {
 ### 时间分配建议
 
 **今天（8月28日）剩余时间（6-8 小时）**：
+
 - 后端调试和修复（4 小时）：修复编译错误，启动服务，测试 WebSocket 连接
 - 硬件协议文档（1 小时）：整理 ADR-003 发给硬件工程师
 - 环境准备（1 小时）：申请 OpenAI API key，创建 Supabase 项目，注册 Railway/Vercel
 
 **明天（8月29日）全天（12-16 小时）**：
+
 - 上午（6 小时）：
   - 后端代码重构（3 小时）：删除 Moment 代码，重命名 Conversation → Message，创建 RealtimeConversation
   - 后端部署（2 小时）：部署到 Railway，配置 Supabase，测试 API
@@ -641,6 +681,7 @@ class ConversationServiceIntegrationTest {
   - 前端 3D 动画（1 小时）：简化版 3D 镜子展示
 
 **后天（8月30日）上午（4-6 小时）**：
+
 - 集成测试（2 小时）：测试所有流程，修 bug
 - 前端部署（1 小时）：部署到 Vercel
 - 演示准备（1 小时）：准备演示话术，录制备用视频
@@ -649,26 +690,33 @@ class ConversationServiceIntegrationTest {
 ### 风险和应对
 
 **风险 1：后端无法启动**
+
 - 应对：准备 H2 内存数据库作为 fallback，跳过 Supabase
 
 **风险 2：硬件固件来不及**
+
 - 应对：做一个 Web 页面模拟硬件（浏览器 + 麦克风 + 文字显示）
 
 **风险 3：3D 动画做不出来**
+
 - 应对：降级为 2D 动画或静态产品图片 + 简单过渡效果
 
 **风险 4：Expo 打包失败**
+
 - 应对：只演示 Expo Go 扫码运行，不打包独立 APP
 
 **风险 5：OpenAI API 调用失败**
+
 - 应对：准备一些预设的回复作为 fallback，demo 模式
 
 ### 演示话术准备
 
 **投资人问："APP 的成长模块在哪？"**
+
 - 回答："MVP 先验证核心技术可行性——实时语音对话。成长模块的产品逻辑已经设计好（展示 PRD），我们会在接下来 2 周内实现。今天主要展示硬件和 AI 能力。"
 
 **投资人问："这和市面上的语音助手有什么区别？"**
+
 - 回答：
   1. "硬件形态不同——折叠镜子，镜子 + 屏幕的设计是情绪支持场景的最佳载体。"
   2. "未来的差异化在长期陪伴——主题成长线、难度趋势、个性化夸夸，这些都在 PRD 里（展示文档）。"
@@ -677,20 +725,15 @@ class ConversationServiceIntegrationTest {
 ### 成功标准
 
 **必须达成**：
+
 1. 硬件镜子能完成一次完整对话（按键 → 说话 → AI 回复 → 显示 + 播放）
 2. 手机 APP 能发送消息并收到回复
 3. 官网监控页面能实时显示硬件对话内容
 4. 所有组件部署到云端，可通过公网访问
 
-**加分项**：
-5. 3D 动画效果好
-6. 对话历史查询功能完整
-7. 错误处理优雅（断网、超时等）
+**加分项**：5. 3D 动画效果好 6. 对话历史查询功能完整 7. 错误处理优雅（断网、超时等）
 
-**可以妥协**：
-8. 3D 动画简化为 2D
-9. 硬件用 Web 页面模拟
-10. Expo 只演示 Expo Go，不打包
+**可以妥协**：8. 3D 动画简化为 2D 9. 硬件用 Web 页面模拟 10. Expo 只演示 Expo Go，不打包
 
 ---
 

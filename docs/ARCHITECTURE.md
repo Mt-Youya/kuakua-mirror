@@ -40,12 +40,12 @@ KuaKua Mirror 是一个基于 Spring Boot WebFlux 的实时 AI 语音对话系�
 
 ### 核心框架
 
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| Spring Boot | 3.2.0 | 应用框架 |
-| Spring WebFlux | 6.1.x | 响应式 Web 框架 |
-| Project Reactor | 3.6.x | 响应式编程库 |
-| Reactor Netty | 1.1.x | 异步网络通信 |
+| 技术            | 版本  | 用途            |
+| --------------- | ----- | --------------- |
+| Spring Boot     | 3.2.0 | 应用框架        |
+| Spring WebFlux  | 6.1.x | 响应式 Web 框架 |
+| Project Reactor | 3.6.x | 响应式编程库    |
+| Reactor Netty   | 1.1.x | 异步网络通信    |
 
 ### 通信协议
 
@@ -87,10 +87,12 @@ KuaKua Mirror 是一个基于 Spring Boot WebFlux 的实时 AI 语音对话系�
 **职责**: 处理客户端请求，管理 WebSocket 连接
 
 **组件**:
+
 - `HealthController`: REST 健康检查端点
 - `RealtimeWebSocketHandler`: WebSocket 消息处理器
 
 **特点**:
+
 - 请求验证
 - 协议转换
 - 连接生命周期管理
@@ -100,11 +102,13 @@ KuaKua Mirror 是一个基于 Spring Boot WebFlux 的实时 AI 语音对话系�
 **职责**: 核心业务逻辑，会话状态管理
 
 **组件**:
+
 - `SessionService`: 会话 CRUD 操作
 - `RealtimeService`: 实时对话协调
 - `AudioService`: 音频处理逻辑
 
 **特点**:
+
 - 无状态设计
 - 响应式流编排
 - 事务边界定义
@@ -114,10 +118,12 @@ KuaKua Mirror 是一个基于 Spring Boot WebFlux 的实时 AI 语音对话系�
 **职责**: 外部系统集成，API 调用封装
 
 **组件**:
+
 - `OpenAIClient`: OpenAI API 客户端
 - `WebSocketClient`: WebSocket 连接管理
 
 **特点**:
+
 - 连接池管理
 - 自动重试机制
 - 熔断降级
@@ -127,6 +133,7 @@ KuaKua Mirror 是一个基于 Spring Boot WebFlux 的实时 AI 语音对话系�
 **职责**: 横切关注点，通用工具
 
 **组件**:
+
 - `IdGenerator`: 唯一 ID 生成
 - `BusinessException`: 业务异常定义
 - `GlobalExceptionHandler`: 全局异常处理
@@ -350,14 +357,14 @@ Flux<AudioChunk>
 
 ### 消息类型映射
 
-| 客户端消息 | 后端处理 | OpenAI 消息 |
-|-----------|---------|------------|
-| `session.update` | 验证 + 转换 | `session.update` |
-| `audio.input` | 透明转发 | `input_audio_buffer.append` |
-| `audio.input_complete` | 触发转写 | `input_audio_buffer.commit` |
-| `conversation.item.create` | 添加上下文 | `conversation.item.create` |
-| `response.create` | 请求响应 | `response.create` |
-| `response.cancel` | 取消请求 | `response.cancel` |
+| 客户端消息                 | 后端处理    | OpenAI 消息                 |
+| -------------------------- | ----------- | --------------------------- |
+| `session.update`           | 验证 + 转换 | `session.update`            |
+| `audio.input`              | 透明转发    | `input_audio_buffer.append` |
+| `audio.input_complete`     | 触发转写    | `input_audio_buffer.commit` |
+| `conversation.item.create` | 添加上下文  | `conversation.item.create`  |
+| `response.create`          | 请求响应    | `response.create`           |
+| `response.cancel`          | 取消请求    | `response.cancel`           |
 
 ### 状态同步
 
@@ -411,12 +418,12 @@ Backend Session State ←→ OpenAI Session State
 
 ### 调度器选择
 
-| 操作类型 | 调度器 | 原因 |
-|---------|-------|------|
-| WebSocket I/O | Event Loop | 避免线程切换 |
-| OpenAI API 调用 | `elastic()` | I/O 密集型 |
-| 音频编码 | `parallel()` | CPU 密集型 |
-| 数据库操作 | `boundedElastic()` | 阻塞 I/O |
+| 操作类型        | 调度器             | 原因         |
+| --------------- | ------------------ | ------------ |
+| WebSocket I/O   | Event Loop         | 避免线程切换 |
+| OpenAI API 调用 | `elastic()`        | I/O 密集型   |
+| 音频编码        | `parallel()`       | CPU 密集型   |
+| 数据库操作      | `boundedElastic()` | 阻塞 I/O     |
 
 ### 背压策略
 
@@ -493,7 +500,7 @@ Exception
 openAIClient.sendRequest(request)
     .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
         .filter(e -> e instanceof TransientException)
-        .onRetryExhaustedThrow((spec, signal) -> 
+        .onRetryExhaustedThrow((spec, signal) ->
             new IntegrationException("Max retries exceeded")
         )
     );
@@ -549,7 +556,7 @@ WebClient client = WebClient.builder()
 **对象池**:
 
 ```java
-ObjectPool<ByteBuffer> bufferPool = 
+ObjectPool<ByteBuffer> bufferPool =
     new GenericObjectPool<>(new ByteBufferFactory());
 ```
 
@@ -670,16 +677,16 @@ ServiceLoader.load(AudioCodec.class);
 
 ### 关键指标
 
-| 类别 | 指标 | 目标 |
-|------|------|------|
-| **性能** | P99 延迟 | < 500ms |
-| | 吞吐量 | > 1000 req/s |
-| **可用性** | 成功率 | > 99.9% |
-| | 错误率 | < 0.1% |
-| **资源** | CPU 使用率 | < 70% |
-| | 内存使用率 | < 80% |
-| **连接** | 并发连接数 | 监控 |
-| | 连接建立时间 | < 100ms |
+| 类别       | 指标         | 目标         |
+| ---------- | ------------ | ------------ |
+| **性能**   | P99 延迟     | < 500ms      |
+|            | 吞吐量       | > 1000 req/s |
+| **可用性** | 成功率       | > 99.9%      |
+|            | 错误率       | < 0.1%       |
+| **资源**   | CPU 使用率   | < 70%        |
+|            | 内存使用率   | < 80%        |
+| **连接**   | 并发连接数   | 监控         |
+|            | 连接建立时间 | < 100ms      |
 
 ### 监控集成
 

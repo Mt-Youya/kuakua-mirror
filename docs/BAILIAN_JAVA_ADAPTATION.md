@@ -12,12 +12,12 @@ K10 不应直连任何大模型，也不应持有 `X-API-Key`。硬件只携带 
 
 ## K10 接口到百炼能力的映射
 
-| K10 接口 | Java 后端调用 | 首选模型 | 调用方式 | 说明 |
-| --- | --- | --- | --- | --- |
-| `POST /api/praise/stream` | `MultiModalConversation.streamCall` | `qwen3-vl-plus` | 流式视觉理解 | 解码 `image_base64` 后作为图片内容与“夸奖”提示词一起提交；将上游文本增量转为现有 SSE `text` 事件。|
-| `POST /api/chat/stream`（ASR） | `Recognition.call` | `qwen-audio-3.0-asr-flash-streaming` | 非流式文件识别 | K10 是整段 WAV Base64 上传，保存为受控临时文件后识别；无需为了这一版 HTTP 接口建立双向音频流。|
-| `POST /api/chat/stream`（LLM） | `Generation.streamCall` | `qwen-plus` | 增量流式文本 | 将 ASR 文本和短会话历史输入，增量结果逐块转换为 SSE `text` 事件。|
-| `POST /api/tts`，及前两条接口的播报 | `HttpSpeechSynthesizer.callAndReturnAudio` | `qwen-audio-3.0-tts-flash` | 非流式返回 `ByteBuffer` | 后端将 WAV 写入受控音频目录，再返回现有 `/audio/{filename}` URL。|
+| K10 接口                            | Java 后端调用                              | 首选模型                             | 调用方式                | 说明                                                                                               |
+| ----------------------------------- | ------------------------------------------ | ------------------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------- |
+| `POST /api/praise/stream`           | `MultiModalConversation.streamCall`        | `qwen3-vl-plus`                      | 流式视觉理解            | 解码 `image_base64` 后作为图片内容与“夸奖”提示词一起提交；将上游文本增量转为现有 SSE `text` 事件。 |
+| `POST /api/chat/stream`（ASR）      | `Recognition.call`                         | `qwen-audio-3.0-asr-flash-streaming` | 非流式文件识别          | K10 是整段 WAV Base64 上传，保存为受控临时文件后识别；无需为了这一版 HTTP 接口建立双向音频流。     |
+| `POST /api/chat/stream`（LLM）      | `Generation.streamCall`                    | `qwen-plus`                          | 增量流式文本            | 将 ASR 文本和短会话历史输入，增量结果逐块转换为 SSE `text` 事件。                                  |
+| `POST /api/tts`，及前两条接口的播报 | `HttpSpeechSynthesizer.callAndReturnAudio` | `qwen-audio-3.0-tts-flash`           | 非流式返回 `ByteBuffer` | 后端将 WAV 写入受控音频目录，再返回现有 `/audio/{filename}` URL。                                  |
 
 模型 ID 是官方示例，不代表每个业务空间、地域和开通状态都可用；上线前应使用百炼的[模型列表接口](https://help.aliyun.com/zh/model-studio/list-models)按 `VU`、`TG`、`ASR`、`TTS` 能力确认实际可用模型。
 

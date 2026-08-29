@@ -22,6 +22,7 @@ Expo APP 已成功连接后端 REST API，实现真实的对话功能。
 默认连接到本地后端：`http://localhost:8080`
 
 确保后端服务已启动：
+
 ```bash
 cd backend
 ./gradlew bootRun
@@ -32,9 +33,7 @@ cd backend
 部署到 Railway 后，需要更新 `services/api.ts` 中的 API_BASE_URL：
 
 ```typescript
-const API_BASE_URL = __DEV__
-  ? 'http://localhost:8080' 
-  : 'https://your-app.railway.app'; // 替换为实际的 Railway URL
+const API_BASE_URL = __DEV__ ? "http://localhost:8080" : "https://your-app.railway.app" // 替换为实际的 Railway URL
 ```
 
 ## 文件结构
@@ -55,6 +54,7 @@ mobile/
 **请求：** `POST /api/conversations`
 
 **Body：**
+
 ```json
 {
   "momentId": 123456
@@ -62,6 +62,7 @@ mobile/
 ```
 
 **响应：**
+
 ```json
 {
   "success": true,
@@ -78,6 +79,7 @@ mobile/
 **请求：** `POST /api/conversations/{sessionId}/messages`
 
 **Body：**
+
 ```json
 {
   "content": "今天完成了一个重要的项目！"
@@ -85,6 +87,7 @@ mobile/
 ```
 
 **响应：**
+
 ```json
 {
   "success": true,
@@ -110,6 +113,7 @@ mobile/
 **请求：** `GET /api/conversations/{sessionId}/messages?limit=20`
 
 **响应：**
+
 ```json
 {
   "success": true,
@@ -138,7 +142,7 @@ mobile/
 2. 启动后端服务（端口 8080）
 3. 更新 `services/api.ts` 中的 API 地址为开发机 IP：
    ```typescript
-   const API_BASE_URL = 'http://192.168.1.x:8080'; // 替换为你的开发机 IP
+   const API_BASE_URL = "http://192.168.1.x:8080" // 替换为你的开发机 IP
    ```
 4. 启动 Expo：
    ```bash

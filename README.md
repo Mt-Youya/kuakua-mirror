@@ -27,7 +27,7 @@ KuaKua Mirror 是一个基于 Spring Boot WebFlux 和 WebSocket 的实时语音�
 ✅ 音频流式处理  
 ✅ 完整的异常处理机制  
 ✅ 健康检查与监控  
-✅ Docker 容器化部署  
+✅ Docker 容器化部署
 
 ## 项目结构
 
@@ -104,6 +104,7 @@ docker-compose up -d
 ```
 
 服务启动后访问：
+
 - **API 基础路径**: http://localhost:8080/api
 - **健康检查**: http://localhost:8080/api/health
 - **版本信息**: http://localhost:8080/api/version
@@ -120,6 +121,7 @@ GET /api/health
 ```
 
 响应示例：
+
 ```json
 {
   "status": "UP",
@@ -135,6 +137,7 @@ GET /api/version
 ```
 
 响应示例：
+
 ```json
 {
   "version": "1.0.0",
@@ -149,6 +152,7 @@ GET /api/version
 #### 消息类型
 
 **客户端 → 服务端**：
+
 - `audio.input` - 音频输入
 - `audio.input_complete` - 音频输入完成
 - `conversation.item.create` - 创建对话项
@@ -157,6 +161,7 @@ GET /api/version
 - `session.update` - 更新会话配置
 
 **服务端 → 客户端**：
+
 - `conversation.item.input_audio_transcription.completed` - 转录完成
 - `response.audio.start` - 响应开始
 - `response.audio.delta` - 音频数据块
@@ -213,11 +218,13 @@ docker-compose up -d
 ```
 
 查看日志：
+
 ```bash
 docker-compose logs -f
 ```
 
 停止服务：
+
 ```bash
 docker-compose down
 ```

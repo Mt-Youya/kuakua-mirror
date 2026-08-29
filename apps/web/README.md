@@ -54,11 +54,13 @@ npm run start
 ## 页面说明
 
 ### 首页 (`/`)
+
 - 欢迎页面
 - 功能特性展示
 - 链接到监控页面
 
 ### 监控页面 (`/monitor`)
+
 - 显示所有设备状态
 - 实时心跳信息
 - 设备在线/离线状态
@@ -68,7 +70,7 @@ npm run start
 API 封装在 `lib/api.ts`，包含以下模块：
 
 - `deviceApi`: 设备管理相关 API
-- `heartbeatApi`: 心跳检测相关 API  
+- `heartbeatApi`: 心跳检测相关 API
 - `dataApi`: 数据上报相关 API
 
 默认 API 地址: `http://localhost:8080/api`

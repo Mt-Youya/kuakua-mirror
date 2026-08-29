@@ -49,6 +49,7 @@ KuaKua Mirror 全栈应用部署完整指南
    - **Connection pooling** (推荐用于生产环境)
 
 示例连接字符串：
+
 ```
 # 直接连接 (Direct connection)
 postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
@@ -113,21 +114,25 @@ cd backend
 3. 配置以下内容：
 
 **Root Directory**:
+
 ```
 backend
 ```
 
 **Build Command** (可选，Railway 通常自动检测):
+
 ```bash
 ./mvnw clean package -DskipTests
 ```
 
 **Start Command**:
+
 ```bash
 java -Dserver.port=$PORT -jar target/mirror-backend-1.0.0.jar
 ```
 
 **Watch Paths** (监控变更路径):
+
 ```
 backend/**
 ```
@@ -163,6 +168,7 @@ PORT=8080
 ```
 
 **重要提示**：
+
 - `WEBSOCKET_ALLOWED_ORIGINS` 需要包含前端域名
 - `JWT_SECRET` 必须至少 32 字符，使用随机字符串
 - 生产环境务必修改 `ADMIN_PASSWORD`
@@ -332,6 +338,7 @@ WEBSOCKET_ALLOWED_ORIGINS=https://your-vercel-app.vercel.app,https://app.kuakua-
 ### 安装开发工具
 
 **Ubuntu/Debian**:
+
 ```bash
 # 安装 JDK 21
 sudo apt update
@@ -351,6 +358,7 @@ pnpm -v
 ```
 
 **macOS** (使用 Homebrew):
+
 ```bash
 # 安装 JDK 21
 brew install openjdk@21
@@ -368,6 +376,7 @@ pnpm -v
 ```
 
 **Windows**:
+
 1. 下载并安装 [JDK 21](https://adoptium.net/)
 2. 下载并安装 [Node.js 20](https://nodejs.org/)
 3. 安装 pnpm: `npm install -g pnpm`
@@ -376,6 +385,7 @@ pnpm -v
 ### 配置环境变量
 
 **Linux/macOS**:
+
 ```bash
 # 编辑 ~/.bashrc 或 ~/.zshrc
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64  # 根据实际路径调整
@@ -386,6 +396,7 @@ source ~/.bashrc  # 或 source ~/.zshrc
 ```
 
 **Windows**:
+
 1. 右键"此电脑" → 属性 → 高级系统设置
 2. 环境变量 → 新建系统变量 `JAVA_HOME`
 3. 值为 JDK 安装路径，如 `C:\Program Files\Java\jdk-21`
@@ -408,6 +419,7 @@ export OPENAI_API_KEY=your_api_key_here
 ```
 
 启动脚本会自动：
+
 1. 检查 Java 版本
 2. 检查环境变量
 3. 编译项目
@@ -454,6 +466,7 @@ curl http://localhost:8080/api/version
 ```
 
 预期响应：
+
 ```json
 {
   "status": "UP",
@@ -775,26 +788,26 @@ openai:
 
 #### 后端环境变量 (Railway/生产环境)
 
-| 变量名 | 说明 | 示例值 | 必需 |
-|--------|------|--------|------|
-| `DATABASE_URL` | 数据库 JDBC 连接字符串 | `jdbc:postgresql://...` | 是 |
-| `DATABASE_USERNAME` | 数据库用户名 | `postgres` | 是 |
-| `DATABASE_PASSWORD` | 数据库密码 | `your_password` | 是 |
-| `OPENAI_API_KEY` | OpenAI API 密钥 | `sk-proj-...` | 是 |
-| `JWT_SECRET` | JWT 签名密钥（至少 32 字符） | `random_string_32_chars...` | 是 |
-| `JWT_EXPIRATION` | JWT 过期时间（毫秒） | `604800000`（7天） | 否 |
-| `WEBSOCKET_ALLOWED_ORIGINS` | WebSocket 允许的源（逗号分隔） | `https://app.vercel.app` | 是 |
-| `ADMIN_PASSWORD` | 管理员密码 | `secure_password` | 是 |
-| `PORT` | 服务端口 | `8080` | 否 |
-| `SPRING_PROFILES_ACTIVE` | Spring 配置文件 | `prod` | 否 |
+| 变量名                      | 说明                           | 示例值                      | 必需 |
+| --------------------------- | ------------------------------ | --------------------------- | ---- |
+| `DATABASE_URL`              | 数据库 JDBC 连接字符串         | `jdbc:postgresql://...`     | 是   |
+| `DATABASE_USERNAME`         | 数据库用户名                   | `postgres`                  | 是   |
+| `DATABASE_PASSWORD`         | 数据库密码                     | `your_password`             | 是   |
+| `OPENAI_API_KEY`            | OpenAI API 密钥                | `sk-proj-...`               | 是   |
+| `JWT_SECRET`                | JWT 签名密钥（至少 32 字符）   | `random_string_32_chars...` | 是   |
+| `JWT_EXPIRATION`            | JWT 过期时间（毫秒）           | `604800000`（7天）          | 否   |
+| `WEBSOCKET_ALLOWED_ORIGINS` | WebSocket 允许的源（逗号分隔） | `https://app.vercel.app`    | 是   |
+| `ADMIN_PASSWORD`            | 管理员密码                     | `secure_password`           | 是   |
+| `PORT`                      | 服务端口                       | `8080`                      | 否   |
+| `SPRING_PROFILES_ACTIVE`    | Spring 配置文件                | `prod`                      | 否   |
 
 #### 前端环境变量 (Vercel)
 
-| 变量名 | 说明 | 示例值 | 必需 |
-|--------|------|--------|------|
-| `NEXT_PUBLIC_API_URL` | 后端 API 基础 URL | `https://backend.railway.app` | 是 |
-| `NEXT_PUBLIC_WS_URL` | WebSocket 服务 URL | `wss://backend.railway.app` | 是 |
-| `NEXT_PUBLIC_APP_NAME` | 应用名称 | `夸夸镜` | 否 |
+| 变量名                 | 说明               | 示例值                        | 必需 |
+| ---------------------- | ------------------ | ----------------------------- | ---- |
+| `NEXT_PUBLIC_API_URL`  | 后端 API 基础 URL  | `https://backend.railway.app` | 是   |
+| `NEXT_PUBLIC_WS_URL`   | WebSocket 服务 URL | `wss://backend.railway.app`   | 是   |
+| `NEXT_PUBLIC_APP_NAME` | 应用名称           | `夸夸镜`                      | 否   |
 
 ### 生成安全的 JWT Secret
 
@@ -814,11 +827,13 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 #### 连接方式选择
 
 **直接连接** (Direct connection):
+
 - 适用场景：本地开发、小规模应用
 - 连接数限制：较少（默认 100）
 - 格式：`postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres`
 
 **连接池** (Connection pooling) - **推荐生产环境使用**:
+
 - 适用场景：生产环境、高并发应用
 - 连接数限制：较多（默认 1000+）
 - 格式：`postgresql://postgres.[REF]:[PASSWORD]@[REGION].pooler.supabase.com:6543/postgres`
@@ -843,7 +858,7 @@ spring:
       max-lifetime: 1800000
   jpa:
     hibernate:
-      ddl-auto: validate  # 生产环境使用 validate
+      ddl-auto: validate # 生产环境使用 validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -862,6 +877,7 @@ DATABASE_PASSWORD=your_password_here
 ```
 
 **注意**：
+
 - `DATABASE_URL` 必须以 `jdbc:postgresql://` 开头（JDBC 格式）
 - Supabase 提供的是 `postgresql://` 格式，需要手动添加 `jdbc:` 前缀
 
@@ -889,10 +905,10 @@ WEBSOCKET_ALLOWED_ORIGINS=https://your-app.vercel.app,http://localhost:3000
 ```java
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    
+
     @Value("${websocket.allowed-origins:*}")
     private String allowedOrigins;
-    
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
@@ -931,6 +947,7 @@ JAVA_OPTS="-Xms512m \
 ```
 
 **参数说明**：
+
 - `-Xms512m`: 初始堆内存 512MB
 - `-Xmx1g`: 最大堆内存 1GB（Railway 免费套餐建议不超过 1GB）
 - `-XX:+UseG1GC`: 使用 G1 垃圾收集器（适合大堆内存）
@@ -948,6 +965,7 @@ JAVA_OPTS="-Xms512m \
 - 允许所有 CORS 源
 
 激活方式：
+
 ```bash
 export SPRING_PROFILES_ACTIVE=dev
 ./mvnw spring-boot:run
@@ -961,6 +979,7 @@ export SPRING_PROFILES_ACTIVE=dev
 - 严格的 CORS 限制
 
 激活方式：
+
 ```bash
 export SPRING_PROFILES_ACTIVE=prod
 java -jar target/mirror-backend-1.0.0.jar
@@ -1013,6 +1032,7 @@ cd backend
 ### 环境变量最佳实践
 
 1. **本地开发**: 使用 `.env` 文件（已在 `.gitignore` 中）
+
    ```bash
    cd backend
    cp .env.example .env
@@ -1145,6 +1165,7 @@ LOGGING_LEVEL_COM_KUAKUA_MIRROR=DEBUG
 #### 集成示例 - Sentry
 
 **后端集成** (`pom.xml`):
+
 ```xml
 <dependency>
     <groupId>io.sentry</groupId>
@@ -1154,6 +1175,7 @@ LOGGING_LEVEL_COM_KUAKUA_MIRROR=DEBUG
 ```
 
 **配置** (`application.yml`):
+
 ```yaml
 sentry:
   dsn: ${SENTRY_DSN}
@@ -1162,6 +1184,7 @@ sentry:
 ```
 
 **前端集成**:
+
 ```bash
 cd web
 pnpm add @sentry/nextjs
@@ -1173,6 +1196,7 @@ npx @sentry/wizard -i nextjs
 #### 健康检查 Cron 任务
 
 创建 `monitor.sh`:
+
 ```bash
 #!/bin/bash
 
@@ -1198,12 +1222,13 @@ fi
 使用 GitHub Actions 定时运行：
 
 `.github/workflows/health-check.yml`:
+
 ```yaml
 name: Health Check
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # 每 5 分钟检查一次
+    - cron: "*/5 * * * *" # 每 5 分钟检查一次
   workflow_dispatch:
 
 jobs:
@@ -1213,7 +1238,7 @@ jobs:
       - name: Check Backend
         run: |
           curl -f ${{ secrets.BACKEND_URL }}/api/health || exit 1
-      
+
       - name: Check Web
         run: |
           curl -f ${{ secrets.FRONTEND_URL }} || exit 1
@@ -1226,6 +1251,7 @@ jobs:
 ### 1. API Key 和密钥管理
 
 #### 不要做的事：
+
 ```java
 // ❌ 不要硬编码 API Key
 String apiKey = "sk-proj-abc123...";
@@ -1235,6 +1261,7 @@ git add .env  // 危险！
 ```
 
 #### 正确做法：
+
 ```java
 // ✅ 使用环境变量
 @Value("${openai.api.key}")
@@ -1258,6 +1285,7 @@ echo ".env" >> .gitignore
 #### Supabase 安全配置
 
 1. **启用 Row Level Security (RLS)**:
+
 ```sql
 -- 在 Supabase SQL Editor 中执行
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -1296,32 +1324,34 @@ openssl rand -base64 24
 Railway 和 Vercel 自动提供 SSL 证书，确保：
 
 1. **前端配置**使用 HTTPS:
+
 ```typescript
 // next.config.ts
 const config = {
   async headers() {
     return [
       {
-        source: '/:path*',
+        source: "/:path*",
         headers: [
           {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains'
-          }
-        ]
-      }
-    ];
-  }
-};
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains",
+          },
+        ],
+      },
+    ]
+  },
+}
 ```
 
 2. **后端配置**只允许 HTTPS（生产环境）:
+
 ```yaml
 # application-prod.yml
 server:
   ssl:
-    enabled: false  # Railway 在负载均衡层处理 SSL
-  forward-headers-strategy: native  # 信任 X-Forwarded-* 头
+    enabled: false # Railway 在负载均衡层处理 SSL
+  forward-headers-strategy: native # 信任 X-Forwarded-* 头
 ```
 
 #### CORS 配置
@@ -1330,10 +1360,10 @@ server:
 // 生产环境严格配置
 @Configuration
 public class SecurityConfig {
-    
+
     @Value("${allowed.origins}")
     private String[] allowedOrigins;
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -1342,7 +1372,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
         return source;
@@ -1367,22 +1397,22 @@ public class SecurityConfig {
 ```java
 @Component
 public class RateLimitFilter implements Filter {
-    
+
     private final Map<String, Bucket> cache = new ConcurrentHashMap<>();
-    
+
     private Bucket createNewBucket() {
         return Bucket.builder()
             .addLimit(Limit.of(100, Duration.ofMinutes(1)))
             .build();
     }
-    
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String ip = httpRequest.getRemoteAddr();
-        
+
         Bucket bucket = cache.computeIfAbsent(ip, k -> createNewBucket());
-        
+
         if (bucket.tryConsume(1)) {
             chain.doFilter(request, response);
         } else {
@@ -1399,35 +1429,35 @@ Vercel Edge Middleware 实现：
 
 ```typescript
 // middleware.ts
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-const rateLimit = new Map<string, { count: number; resetTime: number }>();
+const rateLimit = new Map<string, { count: number; resetTime: number }>()
 
 export function middleware(request: NextRequest) {
-  const ip = request.ip ?? 'anonymous';
-  const now = Date.now();
-  const limit = 100; // 每分钟 100 次请求
-  const window = 60 * 1000; // 1 分钟
+  const ip = request.ip ?? "anonymous"
+  const now = Date.now()
+  const limit = 100 // 每分钟 100 次请求
+  const window = 60 * 1000 // 1 分钟
 
-  const record = rateLimit.get(ip);
-  
+  const record = rateLimit.get(ip)
+
   if (!record || now > record.resetTime) {
-    rateLimit.set(ip, { count: 1, resetTime: now + window });
-    return NextResponse.next();
+    rateLimit.set(ip, { count: 1, resetTime: now + window })
+    return NextResponse.next()
   }
-  
+
   if (record.count >= limit) {
-    return new NextResponse('Too Many Requests', { status: 429 });
+    return new NextResponse("Too Many Requests", { status: 429 })
   }
-  
-  record.count++;
-  return NextResponse.next();
+
+  record.count++
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: '/api/:path*',
-};
+  matcher: "/api/:path*",
+}
 ```
 
 ### 5. 日志安全
@@ -1455,7 +1485,7 @@ logging:
   logback:
     rollingpolicy:
       max-file-size: 100MB
-      max-history: 30  # 保留 30 天
+      max-history: 30 # 保留 30 天
       total-size-cap: 3GB
       clean-history-on-start: true
 ```
@@ -1480,6 +1510,7 @@ pnpm audit
 #### GitHub Dependabot
 
 创建 `.github/dependabot.yml`:
+
 ```yaml
 version: 2
 updates:
@@ -1488,7 +1519,7 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-    
+
   - package-ecosystem: "npm"
     directory: "/web"
     schedule:
@@ -1506,32 +1537,38 @@ updates:
 
 ##### 问题 1: 构建失败 - "Java version mismatch"
 
-**症状**: 
+**症状**:
+
 ```
 Error: Java version 17 detected, but version 21 required
 ```
 
 **解决方案**:
+
 1. 在 Railway 项目根目录创建 `nixpacks.toml`（如果不存在）:
+
 ```toml
 [phases.setup]
 nixPkgs = ["jdk21"]
 ```
 
 2. 或在 `backend/system.properties` 中指定：
+
 ```properties
 java.runtime.version=21
 ```
 
 ##### 问题 2: 数据库连接失败
 
-**症状**: 
+**症状**:
+
 ```
 Failed to obtain JDBC Connection
 Connection refused: db.xxx.supabase.co:5432
 ```
 
 **排查步骤**:
+
 ```bash
 # 检查 DATABASE_URL 格式
 echo $DATABASE_URL
@@ -1542,6 +1579,7 @@ psql "postgresql://postgres:password@host:port/postgres"
 ```
 
 **解决方案**:
+
 - 确认 `DATABASE_URL` 包含 `jdbc:` 前缀
 - 检查 Supabase 数据库是否处于暂停状态（免费版会自动暂停）
 - 验证密码中是否包含特殊字符（需要 URL 编码）
@@ -1552,16 +1590,19 @@ psql "postgresql://postgres:password@host:port/postgres"
 **症状**: Railway 部署成功，但访问返回 502
 
 **排查步骤**:
+
 1. 检查 Railway Logs 查看应用是否真正启动
 2. 确认应用监听的端口是否使用 `$PORT` 环境变量
 
 **解决方案**:
+
 ```bash
 # Start Command 必须包含 -Dserver.port=$PORT
 java -Dserver.port=$PORT -jar target/mirror-backend-1.0.0.jar
 ```
 
 在 `application.yml` 中配置：
+
 ```yaml
 server:
   port: ${PORT:8080}
@@ -1572,6 +1613,7 @@ server:
 **症状**: 应用启动但使用默认配置，未读取环境变量
 
 **解决方案**:
+
 1. 在 Railway Variables 页面确认变量已保存
 2. 修改变量后需要重新部署（点击 Redeploy）
 3. 检查变量名拼写是否正确（区分大小写）
@@ -1581,11 +1623,13 @@ server:
 ##### 问题 1: 构建失败 - "Module not found"
 
 **症状**:
+
 ```
 Error: Cannot find module 'next'
 ```
 
 **解决方案**:
+
 1. 确认 Root Directory 设置为 `web`
 2. 检查 Install Command：
    - 如果使用 pnpm: `pnpm install`
@@ -1595,12 +1639,15 @@ Error: Cannot find module 'next'
 ##### 问题 2: API 请求失败 - CORS 错误
 
 **症状**: 浏览器控制台显示
+
 ```
 Access to fetch at 'https://backend.railway.app/api/...' from origin 'https://app.vercel.app' has been blocked by CORS policy
 ```
 
 **解决方案**:
+
 1. 在 Railway 后端添加前端域名到 CORS 配置：
+
 ```env
 WEBSOCKET_ALLOWED_ORIGINS=https://your-app.vercel.app,https://your-app-git-main.vercel.app
 ```
@@ -1611,6 +1658,7 @@ WEBSOCKET_ALLOWED_ORIGINS=https://your-app.vercel.app,https://your-app-git-main.
    - Preview (PR): `your-app-pr-123.vercel.app`
 
 3. 可以使用通配符（仅开发/测试环境）：
+
 ```env
 WEBSOCKET_ALLOWED_ORIGINS=https://*.vercel.app
 ```
@@ -1620,6 +1668,7 @@ WEBSOCKET_ALLOWED_ORIGINS=https://*.vercel.app
 **症状**: `process.env.NEXT_PUBLIC_API_URL` 返回 `undefined`
 
 **解决方案**:
+
 1. 环境变量必须以 `NEXT_PUBLIC_` 开头才能在客户端访问
 2. 修改环境变量后需要重新部署
 3. 确认在 Vercel Dashboard 中变量应用到了正确的环境（Production/Preview/Development）
@@ -1629,6 +1678,7 @@ WEBSOCKET_ALLOWED_ORIGINS=https://*.vercel.app
 **症状**: 代码更新后，访问 Vercel 仍显示旧版本
 
 **解决方案**:
+
 1. 清除浏览器缓存（Ctrl+Shift+R 或 Cmd+Shift+R）
 2. 检查 Vercel Deployment 状态，确认最新部署已完成
 3. 如果是 Preview 部署，确认访问的是正确的 URL
@@ -1638,11 +1688,13 @@ WEBSOCKET_ALLOWED_ORIGINS=https://*.vercel.app
 ##### 问题 1: 数据库连接超时
 
 **症状**:
+
 ```
 org.postgresql.util.PSQLException: Connection timed out
 ```
 
 **解决方案**:
+
 1. 免费版 Supabase 项目在 7 天无活动后会暂停，访问 Dashboard 恢复
 2. 检查 Railway 服务所在区域与 Supabase 区域是否相近（减少延迟）
 3. 使用连接池地址而非直接连接
@@ -1650,14 +1702,17 @@ org.postgresql.util.PSQLException: Connection timed out
 ##### 问题 2: 认证失败 - "password authentication failed"
 
 **症状**:
+
 ```
 FATAL: password authentication failed for user "postgres"
 ```
 
 **解决方案**:
+
 1. 在 Supabase Dashboard → Settings → Database 重置数据库密码
 2. 更新 Railway 环境变量中的 `DATABASE_PASSWORD`
 3. 如果密码包含特殊字符，进行 URL 编码：
+
 ```bash
 # 例如：密码 p@ss&word 应编码为 p%40ss%26word
 ```
@@ -1665,17 +1720,20 @@ FATAL: password authentication failed for user "postgres"
 ##### 问题 3: SSL 连接错误
 
 **症状**:
+
 ```
 SSL connection error: The server does not support SSL
 ```
 
 **解决方案**:
 在连接字符串末尾添加 SSL 参数：
+
 ```
 jdbc:postgresql://host:port/postgres?sslmode=require
 ```
 
 或在 `application.yml` 中配置：
+
 ```yaml
 spring:
   datasource:
@@ -1687,8 +1745,10 @@ spring:
 **症状**: Flyway 迁移失败，表已存在
 
 **解决方案**:
+
 1. 检查 Supabase 是否已有表结构（可能是之前手动创建的）
 2. 方案 A：清空数据库（慎用）：
+
 ```sql
 -- 在 Supabase SQL Editor 中执行
 DROP SCHEMA public CASCADE;
@@ -1706,6 +1766,7 @@ GRANT ALL ON SCHEMA public TO public;
 **症状**: 前端控制台显示 WebSocket 连接失败
 
 **排查步骤**:
+
 ```bash
 # 测试 WebSocket 端点（需安装 wscat）
 npm install -g wscat
@@ -1715,6 +1776,7 @@ wscat -c wss://your-backend.railway.app/v1/realtime
 ```
 
 **解决方案**:
+
 1. 确认后端 WebSocket 配置正确
 2. 检查 CORS/Origin 配置
 3. Railway 会自动处理 WebSocket 升级，无需额外配置
@@ -1724,6 +1786,7 @@ wscat -c wss://your-backend.railway.app/v1/realtime
 **症状**: 应用启动正常，但 AI 对话无响应
 
 **排查步骤**:
+
 ```bash
 # 检查 API Key（本地）
 echo $OPENAI_API_KEY
@@ -1734,6 +1797,7 @@ curl https://api.openai.com/v1/models \
 ```
 
 **解决方案**:
+
 - 验证 API Key 有效性（OpenAI Platform → API Keys）
 - 检查 OpenAI 账户余额
 - 确认 API Key 权限包含所需的模型访问
@@ -1743,6 +1807,7 @@ curl https://api.openai.com/v1/models \
 **症状**: 用户登录后立即掉线，或提示 token 无效
 
 **解决方案**:
+
 1. 确认 `JWT_SECRET` 长度至少 32 字符
 2. 检查前后端是否使用相同的 `JWT_SECRET`
 3. 验证 `JWT_EXPIRATION` 设置合理（推荐 7 天 = 604800000 毫秒）
@@ -1752,6 +1817,7 @@ curl https://api.openai.com/v1/models \
 **症状**: Vercel 部署后，图片或其他静态资源无法加载
 
 **解决方案**:
+
 1. 静态资源应放在 `web/public` 目录
 2. 访问路径使用 `/image.png` 而非 `/public/image.png`
 3. 检查文件名大小写（Linux 区分大小写）
@@ -1761,11 +1827,13 @@ curl https://api.openai.com/v1/models \
 #### 问题 1: 响应速度慢
 
 **排查步骤**:
+
 1. 检查 Railway 日志中的请求耗时
 2. 使用浏览器 Network 标签分析慢请求
 3. 检查数据库查询是否有 N+1 问题
 
 **优化方案**:
+
 1. 为常用查询添加数据库索引
 2. 使用 Redis 缓存热点数据
 3. 优化 JPA 查询，使用 `@EntityGraph` 避免懒加载
@@ -1778,8 +1846,10 @@ curl https://api.openai.com/v1/models \
 **说明**: Railway 免费版会在 5 分钟无请求后将应用置为睡眠状态
 
 **解决方案**:
+
 1. 升级到 Railway Developer 套餐（$5/月）
 2. 使用定时任务保持应用活跃：
+
 ```bash
 # 使用外部 cron 服务（如 cron-job.org）每 4 分钟访问一次
 GET https://your-backend.railway.app/api/health
@@ -1834,7 +1904,7 @@ console.log(process.env.NEXT_PUBLIC_API_URL)
 
 - [ ] 注册 Supabase 账号并创建项目
 - [ ] 注册 Railway 账号并连接 GitHub
-- [ ] 注册 Vercel 账号并连接 GitHub  
+- [ ] 注册 Vercel 账号并连接 GitHub
 - [ ] 获取 OpenAI API Key（确保有余额）
 - [ ] 准备强随机密码用于 JWT_SECRET
 - [ ] 项目代码已推送到 GitHub
@@ -2044,11 +2114,13 @@ psql "postgresql://postgres:[PASS]@[HOST]:6543/postgres" < backup.sql
 #### 回滚部署
 
 **Railway**:
+
 1. 进入 Deployments 标签
 2. 找到之前的成功部署
 3. 点击 "..." → Redeploy
 
 **Vercel**:
+
 1. 进入 Deployments 标签
 2. 找到之前的成功部署
 3. 点击 "..." → Promote to Production
@@ -2072,6 +2144,7 @@ psql "postgresql://postgres:[PASS]@[HOST]:6543/postgres" < backup.sql
 #### 常见问题
 
 如遇到问题，请：
+
 1. 查看本文档的 [故障排查](#故障排查) 部分
 2. 检查平台状态页面（Railway/Vercel/Supabase Status）
 3. 查看应用日志和错误信息
@@ -2103,7 +2176,7 @@ OpenAI API (AI 服务)
 ✅ **全球 CDN**：Vercel 提供全球边缘节点  
 ✅ **自动 SSL**：HTTPS 开箱即用  
 ✅ **Git 集成**：推送代码自动部署  
-✅ **成本可控**：免费套餐足够小型项目使用  
+✅ **成本可控**：免费套餐足够小型项目使用
 
 ### 注意事项
 
@@ -2111,11 +2184,12 @@ OpenAI API (AI 服务)
 ⚠️ **成本监控**：关注 Railway 和 OpenAI API 使用量  
 ⚠️ **安全配置**：保护好所有 API Key 和密钥  
 ⚠️ **性能监控**：使用 Sentry 等工具监控错误  
-⚠️ **日志管理**：定期检查日志发现潜在问题  
+⚠️ **日志管理**：定期检查日志发现潜在问题
 
 ### 下一步
 
 部署完成后，建议：
+
 1. 配置自定义域名（提升品牌形象）
 2. 设置监控和告警（及时发现问题）
 3. 启用 CDN 和缓存（提升性能）
@@ -2130,6 +2204,7 @@ OpenAI API (AI 服务)
 **维护者**: KuaKua Mirror Team
 
 **相关文档**:
+
 - [API 文档](./API.md)
 - [架构设计](./ARCHITECTURE.md)
 - [开发指南](../backend/README.md)

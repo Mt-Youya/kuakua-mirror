@@ -3,5 +3,6 @@ packages:
   - "apps/*"
   - "tools/*"
 allowBuilds:
+  esbuild: true
   sqlite3: true
   unrs-resolver: true

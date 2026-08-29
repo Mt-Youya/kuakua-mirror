@@ -2,6 +2,14 @@
   "name": "@kuakua/device-simulator",
   "version": "0.0.1",
   "description": "KuaKua Mirror Device Simulator - 模拟真实设备进行Backend/Web联调",
+  "keywords": [
+    "device",
+    "kuakua",
+    "simulator",
+    "testing"
+  ],
+  "license": "MIT",
+  "author": "KuaKua Team",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -9,14 +17,6 @@
     "start": "node dist/index.js",
     "clean": "rm -rf dist"
   },
-  "keywords": [
-    "kuakua",
-    "device",
-    "simulator",
-    "testing"
-  ],
-  "author": "KuaKua Team",
-  "license": "MIT",
   "dependencies": {
     "@kuakua/protocol": "workspace:*",
     "axios": "^1.20.0",

@@ -1,53 +1,49 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { monitorApi } from "@/lib/api";
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { monitorApi } from "@/lib/api"
 
 interface Device {
-  deviceId: string;
-  deviceName: string;
-  status: "ONLINE" | "OFFLINE";
+  deviceId: string
+  deviceName: string
+  status: "ONLINE" | "OFFLINE"
 }
 
 interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: string;
-  deviceId: string;
+  id: string
+  role: "user" | "assistant"
+  content: string
+  timestamp: string
+  deviceId: string
 }
 
 export default function MonitorPage() {
-  const [devices, setDevices] = useState<Device[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("connecting");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [devices, setDevices] = useState<Device[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null)
+  const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("connecting")
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const eventSourceRef = useRef<EventSource | null>(null)
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // 连接 SSE 流
   useEffect(() => {
     const connectSSE = () => {
-      setConnectionStatus("connecting");
+      setConnectionStatus("connecting")
 
       const eventSource = monitorApi.connectMonitorStream({
         onDeviceConnected: (event) => {
-          console.log("Device connected:", event);
+          console.log("Device connected:", event)
           setDevices((prev) => {
             // 检查设备是否已存在
-            const exists = prev.some((d) => d.deviceId === event.deviceId);
+            const exists = prev.some((d) => d.deviceId === event.deviceId)
             if (exists) {
               // 更新为在线状态
-              return prev.map((d) =>
-                d.deviceId === event.deviceId
-                  ? { ...d, status: "ONLINE" as const }
-                  : d
-              );
+              return prev.map((d) => (d.deviceId === event.deviceId ? { ...d, status: "ONLINE" as const } : d))
             }
             // 添加新设备
             return [
@@ -57,26 +53,22 @@ export default function MonitorPage() {
                 deviceName: event.deviceName,
                 status: "ONLINE" as const,
               },
-            ];
-          });
+            ]
+          })
 
           // 如果还没有选中设备，自动选中第一个
-          setSelectedDevice((prev) => prev || event.deviceId);
+          setSelectedDevice((prev) => prev || event.deviceId)
         },
 
         onDeviceDisconnected: (event) => {
-          console.log("Device disconnected:", event);
+          console.log("Device disconnected:", event)
           setDevices((prev) =>
-            prev.map((d) =>
-              d.deviceId === event.deviceId
-                ? { ...d, status: "OFFLINE" as const }
-                : d
-            )
-          );
+            prev.map((d) => (d.deviceId === event.deviceId ? { ...d, status: "OFFLINE" as const } : d))
+          )
         },
 
         onUserMessage: (event) => {
-          console.log("User message:", event);
+          console.log("User message:", event)
           setMessages((prev) => [
             ...prev,
             {
@@ -86,11 +78,11 @@ export default function MonitorPage() {
               timestamp: event.timestamp,
               deviceId: event.deviceId,
             },
-          ]);
+          ])
         },
 
         onAssistantMessage: (event) => {
-          console.log("Assistant message:", event);
+          console.log("Assistant message:", event)
           setMessages((prev) => [
             ...prev,
             {
@@ -100,59 +92,57 @@ export default function MonitorPage() {
               timestamp: event.timestamp,
               deviceId: event.deviceId,
             },
-          ]);
+          ])
         },
 
         onError: (error) => {
-          console.error("SSE connection error:", error);
-          setConnectionStatus("disconnected");
+          console.error("SSE connection error:", error)
+          setConnectionStatus("disconnected")
 
           // 自动重连（5秒后）
           if (reconnectTimeoutRef.current) {
-            clearTimeout(reconnectTimeoutRef.current);
+            clearTimeout(reconnectTimeoutRef.current)
           }
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log("Attempting to reconnect...");
+            console.log("Attempting to reconnect...")
             if (eventSourceRef.current) {
-              eventSourceRef.current.close();
+              eventSourceRef.current.close()
             }
-            connectSSE();
-          }, 5000);
+            connectSSE()
+          }, 5000)
         },
-      });
+      })
 
       eventSource.onopen = () => {
-        console.log("SSE connection opened");
-        setConnectionStatus("connected");
-      };
+        console.log("SSE connection opened")
+        setConnectionStatus("connected")
+      }
 
-      eventSourceRef.current = eventSource;
-    };
+      eventSourceRef.current = eventSource
+    }
 
-    connectSSE();
+    connectSSE()
 
     // 清理函数
     return () => {
       if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
+        eventSourceRef.current.close()
+        eventSourceRef.current = null
       }
       if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-        reconnectTimeoutRef.current = null;
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
       }
-    };
-  }, []);
+    }
+  }, [])
 
   // 根据选中设备过滤消息
-  const filteredMessages = selectedDevice
-    ? messages.filter((msg) => msg.deviceId === selectedDevice)
-    : [];
+  const filteredMessages = selectedDevice ? messages.filter((msg) => msg.deviceId === selectedDevice) : []
 
   // 自动滚动到最新消息
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [filteredMessages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [filteredMessages])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -167,21 +157,14 @@ export default function MonitorPage() {
                 connectionStatus === "connected"
                   ? "success"
                   : connectionStatus === "connecting"
-                  ? "secondary"
-                  : "destructive"
+                    ? "secondary"
+                    : "destructive"
               }
             >
-              {connectionStatus === "connected"
-                ? "已连接"
-                : connectionStatus === "connecting"
-                ? "连接中..."
-                : "已断开"}
+              {connectionStatus === "connected" ? "已连接" : connectionStatus === "connecting" ? "连接中..." : "已断开"}
             </Badge>
           </div>
-          <Link
-            href="/"
-            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-          >
+          <Link href="/" className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
             返回首页
           </Link>
         </div>
@@ -195,9 +178,7 @@ export default function MonitorPage() {
           <div className="space-y-2">
             {devices.length === 0 ? (
               <div className="text-center text-gray-500 text-sm py-8">
-                {connectionStatus === "connected"
-                  ? "暂无设备连接"
-                  : "等待连接..."}
+                {connectionStatus === "connected" ? "暂无设备连接" : "等待连接..."}
               </div>
             ) : (
               devices.map((device) => (
@@ -213,17 +194,11 @@ export default function MonitorPage() {
                   <CardContent className="p-3">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{device.deviceName}</span>
-                      <Badge
-                        variant={
-                          device.status === "ONLINE" ? "success" : "secondary"
-                        }
-                      >
+                      <Badge variant={device.status === "ONLINE" ? "success" : "secondary"}>
                         {device.status === "ONLINE" ? "在线" : "离线"}
                       </Badge>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {device.deviceId}
-                    </div>
+                    <div className="text-xs text-gray-500 mt-1">{device.deviceId}</div>
                   </CardContent>
                 </Card>
               ))
@@ -236,10 +211,7 @@ export default function MonitorPage() {
           <CardHeader>
             <CardTitle>
               {selectedDevice
-                ? `${
-                    devices.find((d) => d.deviceId === selectedDevice)
-                      ?.deviceName || selectedDevice
-                  } - 对话记录`
+                ? `${devices.find((d) => d.deviceId === selectedDevice)?.deviceName || selectedDevice} - 对话记录`
                 : "请选择设备"}
             </CardTitle>
           </CardHeader>
@@ -248,18 +220,11 @@ export default function MonitorPage() {
             <div className="space-y-4 pb-4">
               {filteredMessages.length === 0 ? (
                 <div className="text-center text-gray-500 text-sm py-8">
-                  {selectedDevice
-                    ? "暂无对话记录"
-                    : "请从左侧选择一个设备查看对话"}
+                  {selectedDevice ? "暂无对话记录" : "请从左侧选择一个设备查看对话"}
                 </div>
               ) : (
                 filteredMessages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
+                  <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div
                       className={`max-w-[70%] rounded-lg p-4 ${
                         message.role === "user"
@@ -268,12 +233,8 @@ export default function MonitorPage() {
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold">
-                          {message.role === "user" ? "用户" : "AI"}
-                        </span>
-                        <span className="text-xs opacity-75">
-                          {message.timestamp}
-                        </span>
+                        <span className="text-xs font-semibold">{message.role === "user" ? "用户" : "AI"}</span>
+                        <span className="text-xs opacity-75">{message.timestamp}</span>
                       </div>
                       <p className="text-sm">{message.content}</p>
                     </div>
@@ -286,5 +247,5 @@ export default function MonitorPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -14,12 +14,7 @@ export enum DeviceStatus {
 /**
  * 设备能力
  */
-export type DeviceCapability =
-  | "microphone"
-  | "speaker"
-  | "camera"
-  | "face_detection"
-  | "display";
+export type DeviceCapability = "microphone" | "speaker" | "camera" | "face_detection" | "display"
 
 /**
  * 音频格式

@@ -83,6 +83,7 @@ MVP：
 ## Headline
 
 # 这一次，
+
 # 镜子站在你这边。
 
 ## Subheadline
@@ -132,6 +133,7 @@ CTA：
 最后：
 
 # 但我们很少在照镜子的时候，
+
 # 夸夸自己。
 
 推荐：
@@ -384,7 +386,7 @@ Buttons：
 ## Background
 
 ```css
---background: #FAF8F5;
+--background: #faf8f5;
 ```
 
 ## Foreground
@@ -396,25 +398,25 @@ Buttons：
 ## Soft Pink
 
 ```css
---soft-pink: #E8CACC;
+--soft-pink: #e8cacc;
 ```
 
 ## Pearl
 
 ```css
---pearl: #F3EFEA;
+--pearl: #f3efea;
 ```
 
 ## Purple
 
 ```css
---accent: #C5A7D8;
+--accent: #c5a7d8;
 ```
 
 ## Gray
 
 ```css
---soft-gray: #D9D6D2;
+--soft-gray: #d9d6d2;
 ```
 
 ---

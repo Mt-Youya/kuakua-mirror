@@ -23,12 +23,7 @@ yarn add @kuakua/protocol
 ### TypeScript类型
 
 ```typescript
-import {
-  DeviceHelloMessage,
-  DeviceStatus,
-  AudioInputStartMessage,
-  DEFAULT_AUDIO_CONFIG,
-} from "@kuakua/protocol";
+import { DeviceHelloMessage, DeviceStatus, AudioInputStartMessage, DEFAULT_AUDIO_CONFIG } from "@kuakua/protocol"
 
 // 创建device.hello消息
 const helloMsg: DeviceHelloMessage = {
@@ -40,44 +35,35 @@ const helloMsg: DeviceHelloMessage = {
     protocolVersion: "1.0",
     capabilities: ["microphone", "speaker", "camera"],
   },
-};
+}
 ```
 
 ### Zod验证
 
 ```typescript
-import {
-  DeviceHelloSchema,
-  validateMessage,
-  safeValidateMessage,
-} from "@kuakua/protocol";
+import { DeviceHelloSchema, validateMessage, safeValidateMessage } from "@kuakua/protocol"
 
 // 验证消息（抛出异常）
-const validated = validateMessage(DeviceHelloSchema, unknownData);
+const validated = validateMessage(DeviceHelloSchema, unknownData)
 
 // 安全验证（返回结果）
-const result = safeValidateMessage(DeviceHelloSchema, unknownData);
+const result = safeValidateMessage(DeviceHelloSchema, unknownData)
 if (result.success) {
-  console.log("Valid:", result.data);
+  console.log("Valid:", result.data)
 } else {
-  console.error("Invalid:", result.error);
+  console.error("Invalid:", result.error)
 }
 ```
 
 ### 常量
 
 ```typescript
-import {
-  PROTOCOL_VERSION,
-  DEFAULT_AUDIO_CONFIG,
-  HEARTBEAT_CONFIG,
-  WS_ENDPOINTS,
-} from "@kuakua/protocol";
+import { PROTOCOL_VERSION, DEFAULT_AUDIO_CONFIG, HEARTBEAT_CONFIG, WS_ENDPOINTS } from "@kuakua/protocol"
 
-console.log(PROTOCOL_VERSION); // "1.0"
-console.log(DEFAULT_AUDIO_CONFIG.sampleRate); // 16000
-console.log(HEARTBEAT_CONFIG.interval); // 15000
-console.log(WS_ENDPOINTS.device); // "/ws/device"
+console.log(PROTOCOL_VERSION) // "1.0"
+console.log(DEFAULT_AUDIO_CONFIG.sampleRate) // 16000
+console.log(HEARTBEAT_CONFIG.interval) // 15000
+console.log(WS_ENDPOINTS.device) // "/ws/device"
 ```
 
 ## 目录结构
@@ -104,6 +90,7 @@ packages/protocol/
 ## 消息类型
 
 ### Device Messages
+
 - `device.hello` - 设备连接握手
 - `device.ready` - Backend握手响应
 - `device.status` - 设备状态更新
@@ -112,6 +99,7 @@ packages/protocol/
 - `ping` / `pong` - 心跳检测
 
 ### Audio Messages
+
 - `audio.input.start` - 开始音频输入
 - `audio.input.end` - 结束音频输入
 - `transcript.final` - STT转录结果
@@ -120,6 +108,7 @@ packages/protocol/
 - `audio.output.end` - 结束音频输出
 
 ### Vision Messages
+
 - `camera.capture` - 请求拍照
 - `capture.started` - 拍照开始
 - `capture.completed` - 拍照完成
@@ -127,6 +116,7 @@ packages/protocol/
 - `vision.result` - 视觉识别结果
 
 ### Error Messages
+
 - `error` - 统一错误消息
 
 ## 开发

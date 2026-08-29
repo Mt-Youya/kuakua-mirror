@@ -1,9 +1,9 @@
-import { MessageEnvelope, ErrorPayload } from "../types/common";
+import { MessageEnvelope, ErrorPayload } from "../types/common"
 
 /**
  * Error Message - 统一错误消息
  */
-export type ErrorMessage = MessageEnvelope<ErrorPayload>;
+export type ErrorMessage = MessageEnvelope<ErrorPayload>
 
 /**
  * 错误代码常量
@@ -17,6 +17,6 @@ export const ErrorCodes = {
   SPEAKER_BUSY: "SPEAKER_BUSY",
   NETWORK_ERROR: "NETWORK_ERROR",
   INTERNAL_ERROR: "INTERNAL_ERROR",
-} as const;
+} as const
 
-export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes]

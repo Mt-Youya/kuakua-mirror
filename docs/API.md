@@ -24,11 +24,13 @@ KuaKua Mirror 后端服务 API 完整文档
 检查服务运行状态
 
 **请求**
+
 ```http
 GET /api/health
 ```
 
 **响应**
+
 ```json
 {
   "status": "UP",
@@ -38,6 +40,7 @@ GET /api/health
 ```
 
 **状态码**
+
 - `200 OK` - 服务正常运行
 
 ---
@@ -47,11 +50,13 @@ GET /api/health
 获取服务版本信息
 
 **请求**
+
 ```http
 GET /api/version
 ```
 
 **响应**
+
 ```json
 {
   "version": "1.0.0",
@@ -60,6 +65,7 @@ GET /api/version
 ```
 
 **状态码**
+
 - `200 OK` - 成功获取版本信息
 
 ---
@@ -77,24 +83,24 @@ GET /api/version
 使用标准 WebSocket 客户端连接：
 
 ```javascript
-const ws = new WebSocket('ws://localhost:8080/v1/realtime');
+const ws = new WebSocket("ws://localhost:8080/v1/realtime")
 
 ws.onopen = () => {
-  console.log('WebSocket 连接已建立');
-};
+  console.log("WebSocket 连接已建立")
+}
 
 ws.onmessage = (event) => {
-  const message = JSON.parse(event.data);
-  console.log('收到消息:', message);
-};
+  const message = JSON.parse(event.data)
+  console.log("收到消息:", message)
+}
 
 ws.onerror = (error) => {
-  console.error('WebSocket 错误:', error);
-};
+  console.error("WebSocket 错误:", error)
+}
 
 ws.onclose = () => {
-  console.log('WebSocket 连接已关闭');
-};
+  console.log("WebSocket 连接已关闭")
+}
 ```
 
 ### 消息类型
@@ -132,6 +138,7 @@ ws.onclose = () => {
 ```
 
 **字段说明**：
+
 - `modalities`: 交互模式，可选 `["text"]` 或 `["text", "audio"]`
 - `instructions`: 系统提示词，定义 AI 角色和行为
 - `voice`: 语音角色，可选 `alloy`, `echo`, `shimmer` 等
@@ -156,6 +163,7 @@ ws.onclose = () => {
 ```
 
 **字段说明**：
+
 - `audio`: Base64 编码的音频数据（PCM16 格式，24kHz，单声道）
 
 ---
@@ -193,6 +201,7 @@ ws.onclose = () => {
 ```
 
 **字段说明**：
+
 - `item.type`: 项目类型，固定为 `message`
 - `item.role`: 角色，可选 `user` 或 `assistant`
 - `item.content`: 内容数组，支持 `input_text` 和 `input_audio` 类型
@@ -220,6 +229,7 @@ ws.onclose = () => {
 ```
 
 **字段说明**：
+
 - `response.modalities`: 响应模式
 - `response.instructions`: 临时指令覆盖
 - 其他字段与 `session.update` 类似
@@ -284,7 +294,7 @@ ws.onclose = () => {
   "event_id": "event_def456",
   "session": {
     "id": "sess_xyz789",
-    "object": "realtime.session",
+    "object": "realtime.session"
     // ... 更新后的会话配置
   }
 }
@@ -307,6 +317,7 @@ ws.onclose = () => {
 ```
 
 **字段说明**：
+
 - `item_id`: 对话项 ID
 - `content_index`: 内容索引
 - `transcript`: 识别出的文本
@@ -347,6 +358,7 @@ AI 开始生成音频响应
 ```
 
 **字段说明**：
+
 - `delta`: Base64 编码的音频数据块
 - 客户端需要累积接收并播放
 
@@ -387,6 +399,7 @@ AI 开始生成音频响应
 ```
 
 **错误类型**：
+
 - `invalid_request_error`: 请求参数错误
 - `authentication_error`: 认证失败
 - `rate_limit_error`: 超出速率限制
@@ -413,15 +426,15 @@ AI 开始生成音频响应
 
 ### 常见错误码
 
-| HTTP 状态码 | 错误码 | 说明 |
-|------------|--------|------|
-| 400 | `INVALID_REQUEST` | 请求参数不合法 |
-| 401 | `UNAUTHORIZED` | 未授权访问 |
-| 404 | `NOT_FOUND` | 资源不存在 |
-| 429 | `RATE_LIMIT_EXCEEDED` | 超出速率限制 |
-| 500 | `INTERNAL_ERROR` | 服务器内部错误 |
-| 502 | `BAD_GATEWAY` | 上游服务错误 |
-| 503 | `SERVICE_UNAVAILABLE` | 服务暂时不可用 |
+| HTTP 状态码 | 错误码                | 说明           |
+| ----------- | --------------------- | -------------- |
+| 400         | `INVALID_REQUEST`     | 请求参数不合法 |
+| 401         | `UNAUTHORIZED`        | 未授权访问     |
+| 404         | `NOT_FOUND`           | 资源不存在     |
+| 429         | `RATE_LIMIT_EXCEEDED` | 超出速率限制   |
+| 500         | `INTERNAL_ERROR`      | 服务器内部错误 |
+| 502         | `BAD_GATEWAY`         | 上游服务错误   |
+| 503         | `SERVICE_UNAVAILABLE` | 服务暂时不可用 |
 
 ### WebSocket 错误处理
 
@@ -457,21 +470,21 @@ WebSocket 连接中的错误通过 `error` 类型消息传递，客户端应当�
 ### 音频处理示例
 
 **编码音频数据（JavaScript）**:
+
 ```javascript
 // 假设 audioBuffer 是 Int16Array
-const base64Audio = btoa(
-  String.fromCharCode.apply(null, new Uint8Array(audioBuffer.buffer))
-);
+const base64Audio = btoa(String.fromCharCode.apply(null, new Uint8Array(audioBuffer.buffer)))
 ```
 
 **解码音频数据（JavaScript）**:
+
 ```javascript
-const binaryString = atob(base64Audio);
-const bytes = new Uint8Array(binaryString.length);
+const binaryString = atob(base64Audio)
+const bytes = new Uint8Array(binaryString.length)
 for (let i = 0; i < binaryString.length; i++) {
-  bytes[i] = binaryString.charCodeAt(i);
+  bytes[i] = binaryString.charCodeAt(i)
 }
-const audioBuffer = new Int16Array(bytes.buffer);
+const audioBuffer = new Int16Array(bytes.buffer)
 ```
 
 ---
@@ -481,70 +494,78 @@ const audioBuffer = new Int16Array(bytes.buffer);
 ### 完整对话流程
 
 ```javascript
-const ws = new WebSocket('ws://localhost:8080/v1/realtime');
+const ws = new WebSocket("ws://localhost:8080/v1/realtime")
 
 // 1. 连接建立
 ws.onopen = () => {
   // 2. 更新会话配置
-  ws.send(JSON.stringify({
-    type: 'session.update',
-    session: {
-      modalities: ['text', 'audio'],
-      instructions: '你是一个友好的 AI 助手',
-      voice: 'alloy'
-    }
-  }));
-};
+  ws.send(
+    JSON.stringify({
+      type: "session.update",
+      session: {
+        modalities: ["text", "audio"],
+        instructions: "你是一个友好的 AI 助手",
+        voice: "alloy",
+      },
+    })
+  )
+}
 
 // 3. 发送音频输入
 function sendAudio(audioData) {
-  ws.send(JSON.stringify({
-    type: 'audio.input',
-    audio: audioData  // Base64 编码
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "audio.input",
+      audio: audioData, // Base64 编码
+    })
+  )
 }
 
 // 4. 标记音频输入完成
 function completeAudio() {
-  ws.send(JSON.stringify({
-    type: 'audio.input_complete'
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "audio.input_complete",
+    })
+  )
 }
 
 // 5. 请求生成响应
 function createResponse() {
-  ws.send(JSON.stringify({
-    type: 'response.create'
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "response.create",
+    })
+  )
 }
 
 // 6. 接收消息
 ws.onmessage = (event) => {
-  const message = JSON.parse(event.data);
-  
+  const message = JSON.parse(event.data)
+
   switch (message.type) {
-    case 'session.created':
-      console.log('会话已创建:', message.session.id);
-      break;
-      
-    case 'conversation.item.input_audio_transcription.completed':
-      console.log('转录结果:', message.transcript);
-      break;
-      
-    case 'response.audio.delta':
+    case "session.created":
+      console.log("会话已创建:", message.session.id)
+      break
+
+    case "conversation.item.input_audio_transcription.completed":
+      console.log("转录结果:", message.transcript)
+      break
+
+    case "response.audio.delta":
       // 播放音频数据
-      playAudio(message.delta);
-      break;
-      
-    case 'response.audio.done':
-      console.log('响应完成');
-      break;
-      
-    case 'error':
-      console.error('错误:', message.error);
-      break;
+      playAudio(message.delta)
+      break
+
+    case "response.audio.done":
+      console.log("响应完成")
+      break
+
+    case "error":
+      console.error("错误:", message.error)
+      break
   }
-};
+}
 ```
 
 ---

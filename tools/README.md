@@ -123,6 +123,7 @@ python test-device-client.py --verbose
 ```
 
 **解决方法**：
+
 - 检查后端服务器是否已启动
 - 确认端口号是否正确（默认 8080）
 - 检查防火墙设置
@@ -135,6 +136,7 @@ python test-device-client.py --verbose
 ```
 
 **解决方法**：
+
 ```bash
 pip install websockets
 ```
@@ -147,6 +149,7 @@ pip install websockets
 ```
 
 **解决方法**：
+
 - 查看后端日志了解详细错误信息
 - 检查发送的消息格式是否正确
 - 确认协议版本是否匹配
@@ -184,13 +187,13 @@ async def run_test(self):
         # 自定义测试步骤
         await self.send_device_info()
         await asyncio.sleep(1)
-        
+
         # 发送更长的音频
         await self.send_mock_audio(duration_ms=5000)
-        
+
         # 等待更长时间
         await asyncio.sleep(30)
-        
+
     finally:
         self.running = False
         heartbeat_task.cancel()
@@ -219,13 +222,13 @@ async def send_real_audio(self, filepath: str):
     """发送真实音频文件"""
     audio_data = load_audio_file(filepath)
     chunk_size = 4800  # 200ms
-    
+
     for i in range(0, len(audio_data), chunk_size):
         chunk = audio_data[i:i + chunk_size]
         base64_data = base64.b64encode(chunk).decode('utf-8')
         await self.send_message({"type": "audio", "data": base64_data})
         await asyncio.sleep(0.2)
-    
+
     await self.send_message({"type": "audio_end"})
 ```
 

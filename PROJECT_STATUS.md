@@ -5,14 +5,16 @@
 ### ✅ 已完成的工作（20个任务）
 
 #### 阶段 1：基础设施
+
 - ✅ Expo 移动端项目初始化
-- ✅ Next.js 前端项目初始化  
+- ✅ Next.js 前端项目初始化
 - ✅ Expo 聊天界面 UI（带 mock 数据）
 - ✅ 前端首页产品展示
 - ✅ 监控页面 UI（带 mock 数据）
 - ✅ 后端基础调查
 
 #### 阶段 2：后端核心
+
 - ✅ 删除 Moment 领域代码
 - ✅ REST API（ConversationController）
 - ✅ RealtimeConversation 聚合根
@@ -21,12 +23,14 @@
 - ✅ SSE 接口（MonitorController）
 
 #### 阶段 3：集成对接
+
 - ✅ ConversationSession 实体和数据库迁移
 - ✅ 前端连接 SSE 接口
 - ✅ APP 连接 REST API
 - ✅ DeviceWebSocketHandler
 
 #### 阶段 4：文档和工具
+
 - ✅ 硬件协议文档 + Python 测试工具
 - ✅ 部署文档（Railway + Vercel + Supabase）
 - ✅ 集成测试文档
@@ -37,12 +41,14 @@
 ## 🔧 后端编译修复记录
 
 ### 已修复的问题
+
 1. ✅ BusinessException 包名（com.kuakua.mirror.shared.exception）
 2. ✅ Hibernate 注解（@CreationTimestamp, @UpdateTimestamp）
 3. ✅ Message 实体字段补全
 4. ✅ 删除冲突的旧代码（ContextService, MessageController, WebSocketHandshakeInterceptor）
 
 ### 最终修复（刚刚完成）
+
 5. ✅ **备份旧的实时对话服务类**（与新架构不兼容）：
    - `SessionManager.java.bak`
    - `ASRService.java.bak`
@@ -55,6 +61,7 @@
    - 简化为只配置 AudioWebSocketHandler
 
 ### 当前编译状态
+
 后端代码已完成所有修复，应该可以成功编译。
 
 ---
@@ -62,6 +69,7 @@
 ## 🚀 立即可用的功能
 
 ### 后端 API（Spring Boot）
+
 ```
 POST   /api/conversations                    # 创建会话
 POST   /api/conversations/{id}/messages      # 发送消息
@@ -72,16 +80,19 @@ GET    /api/health                            # 健康检查
 ```
 
 ### 前端页面（Next.js）
+
 - `http://localhost:3000/` - 首页（产品展示）
 - `http://localhost:3000/monitor` - 实时监控页面
 
 ### 移动端（Expo）
+
 - 完整的聊天界面
 - 自动创建会话
 - 发送消息并接收 AI 回复
 - 加载历史消息
 
 ### 硬件测试工具
+
 ```bash
 cd tools
 python3 test-device-client.py --host localhost --port 8080
@@ -92,6 +103,7 @@ python3 test-device-client.py --host localhost --port 8080
 ## 📁 关键文件清单
 
 ### 后端核心代码
+
 ```
 backend/src/main/java/com/kuakua/mirror/
 ├── conversation/
@@ -119,6 +131,7 @@ backend/src/main/java/com/kuakua/mirror/
 ```
 
 ### 前端代码
+
 ```
 web/
 ├── app/
@@ -129,6 +142,7 @@ web/
 ```
 
 ### 移动端代码
+
 ```
 mobile/
 ├── App.tsx
@@ -137,6 +151,7 @@ mobile/
 ```
 
 ### 文档
+
 ```
 docs/
 ├── 硬件协议文档.md                 # WebSocket 协议规范
@@ -204,11 +219,13 @@ python3 test-device-client.py
 ## ⚠️ 已知限制
 
 ### 后端
+
 - **旧的实时对话服务类已备份禁用**：SessionManager, ASRService, LLMService, TTSService, RealtimeWebSocketHandler
 - 这些是旧架构的代码，与新的 ConversationController 不兼容
 - 新架构使用 DeviceWebSocketHandler + DeviceProtocolAdapter + RealtimeConversation
 
 ### 环境要求
+
 - Java 21+
 - Maven 3.9+
 - Node.js 18+

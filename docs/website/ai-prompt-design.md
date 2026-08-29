@@ -205,13 +205,7 @@ AI 不应该每次看到用户都立即讲话。
 ```ts
 type ProactiveDecision = {
   shouldSpeak: boolean
-  reason:
-    | "greeting"
-    | "notice_change"
-    | "user_looks_engaged"
-    | "routine"
-    | "follow_up"
-    | "none"
+  reason: "greeting" | "notice_change" | "user_looks_engaged" | "routine" | "follow_up" | "none"
 }
 ```
 
@@ -463,11 +457,7 @@ Web Chat：
 
 ```ts
 {
-  promptVersion,
-  model,
-  category,
-  contextType,
-  feedback
+  ;(promptVersion, model, category, contextType, feedback)
 }
 ```
 

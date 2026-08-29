@@ -56,23 +56,25 @@ npm run dev
 
 ### 默认配置
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| BACKEND_URL | http://localhost:8080 | Backend地址 |
-| DEVICE_ID | mirror-simulator-001 | 设备ID |
-| ACTIVATION_CODE | ABC123 | 激活码 |
-| firmwareVersion | simulator-v1.0.0 | 固件版本 |
-| model | kuakua-mirror-simulator | 设备型号 |
+| 参数            | 默认值                  | 说明        |
+| --------------- | ----------------------- | ----------- |
+| BACKEND_URL     | http://localhost:8080   | Backend地址 |
+| DEVICE_ID       | mirror-simulator-001    | 设备ID      |
+| ACTIVATION_CODE | ABC123                  | 激活码      |
+| firmwareVersion | simulator-v1.0.0        | 固件版本    |
+| model           | kuakua-mirror-simulator | 设备型号    |
 
 ## 模拟流程
 
 ### 1. 设备激活（REST API）
+
 ```
 POST /api/v1/devices/activate
 → 获取deviceToken
 ```
 
 ### 2. WebSocket连接
+
 ```
 连接 ws://localhost:8080/ws/device
 → 发送 device.hello
@@ -80,18 +82,21 @@ POST /api/v1/devices/activate
 ```
 
 ### 3. 心跳和Ping
+
 ```
 每15秒: POST /api/v1/devices/{deviceId}/heartbeat
 每10秒: WebSocket ping → pong
 ```
 
 ### 4. 人脸检测模拟
+
 ```
 连接后5秒: 发送 face.detected (confidence: 0.94)
 再过5秒: 发送 face.lost
 ```
 
 ### 5. 设备状态更新
+
 ```
 发送 device.status (state: idle/listening/thinking/speaking)
 ```
@@ -149,21 +154,22 @@ POST /api/v1/devices/activate
 
 ## 与真实设备的对应
 
-| 功能 | 真实设备 | 模拟器 |
-|------|---------|--------|
-| 设备激活 | ESP32 HTTP请求 | axios HTTP请求 |
-| WebSocket连接 | ESP32 WebSocket库 | ws库 |
-| device.hello | ESP32发送JSON | 发送JSON |
-| 心跳 | 定时器15s | setInterval 15s |
-| Ping/Pong | WebSocket心跳 | 手动发送ping |
-| 人脸检测 | Camera + AI芯片 | 定时模拟事件 |
-| 设备状态 | 真实状态机 | 模拟状态机 |
+| 功能          | 真实设备          | 模拟器          |
+| ------------- | ----------------- | --------------- |
+| 设备激活      | ESP32 HTTP请求    | axios HTTP请求  |
+| WebSocket连接 | ESP32 WebSocket库 | ws库            |
+| device.hello  | ESP32发送JSON     | 发送JSON        |
+| 心跳          | 定时器15s         | setInterval 15s |
+| Ping/Pong     | WebSocket心跳     | 手动发送ping    |
+| 人脸检测      | Camera + AI芯片   | 定时模拟事件    |
+| 设备状态      | 真实状态机        | 模拟状态机      |
 
 ## Phase 1 联调清单
 
 使用此模拟器完成以下验证：
 
 ### Backend验证
+
 - [ ] 设备激活API正常工作
 - [ ] WebSocket连接成功建立
 - [ ] device.hello/ready握手成功
@@ -175,6 +181,7 @@ POST /api/v1/devices/activate
 - [ ] Bearer Token认证正常
 
 ### Web验证（待实现）
+
 - [ ] 实时显示设备在线状态
 - [ ] 显示设备信息（deviceId, firmware）
 - [ ] 显示实时事件流（hello/status/face）
@@ -184,6 +191,7 @@ POST /api/v1/devices/activate
 ## 下一步扩展
 
 ### 音频模拟
+
 ```typescript
 // 模拟音频输入
 simulateAudioInput() {
@@ -198,12 +206,13 @@ simulateAudioInput() {
     },
   };
   this.sendMessage(msg);
-  
+
   // 发送Binary PCM数据...
 }
 ```
 
 ### 摄像头模拟
+
 ```typescript
 // 模拟摄像头拍照
 async simulateCameraCapture() {
@@ -215,22 +224,28 @@ async simulateCameraCapture() {
 ## 故障排查
 
 ### WebSocket连接失败
+
 ```
 ❌ WebSocket错误: connect ECONNREFUSED
 ```
+
 → 检查Backend是否启动：`http://localhost:8080/api/health`
 
 ### 设备激活失败
+
 ```
 ❌ 设备激活失败: Request failed with status code 400
 ```
+
 → 检查activationCode是否有效
 → 检查Backend数据库连接
 
 ### 心跳失败
+
 ```
 ❌ 心跳失败: Request failed with status code 401
 ```
+
 → 检查Bearer Token是否正确
 → 检查Token是否过期
 

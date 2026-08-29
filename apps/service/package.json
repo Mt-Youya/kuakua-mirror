@@ -1,10 +1,10 @@
 {
   "name": "@kuakua/service",
   "version": "1.0.0",
-  "description": "夸夸镜后端服务 - NestJS + WebSocket + OpenAI Realtime API",
-  "author": "",
   "private": true,
+  "description": "夸夸镜后端服务 - NestJS + WebSocket + OpenAI Realtime API",
   "license": "MIT",
+  "author": "",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -58,20 +58,20 @@
     "typescript": "^7.0.2"
   },
   "jest": {
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
     "moduleFileExtensions": [
       "js",
       "json",
       "ts"
     ],
     "rootDir": "src",
+    "testEnvironment": "node",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    }
   }
 }

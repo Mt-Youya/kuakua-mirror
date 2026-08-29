@@ -1,17 +1,15 @@
-import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
-import { ConversationService } from './conversation.service';
-import { CreateConversationDto, SendMessageDto } from './dto/conversation.dto';
-import { MessageRole } from './entities/message.entity';
+import { Controller, Post, Get, Body, Param, Query } from "@nestjs/common"
+import { ConversationService } from "./conversation.service"
+import { CreateConversationDto, SendMessageDto } from "./dto/conversation.dto"
+import { MessageRole } from "./entities/message.entity"
 
-@Controller('conversations')
+@Controller("conversations")
 export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 
   @Post()
   async createConversation(@Body() createDto: CreateConversationDto) {
-    const sessionId = await this.conversationService.createSession(
-      createDto.momentId,
-    );
+    const sessionId = await this.conversationService.createSession(createDto.momentId)
 
     return {
       success: true,
@@ -19,19 +17,13 @@ export class ConversationController {
         sessionId,
         momentId: createDto.momentId,
       },
-      message: 'Conversation created successfully',
-    };
+      message: "Conversation created successfully",
+    }
   }
 
-  @Get(':sessionId/messages')
-  async getMessages(
-    @Param('sessionId') sessionId: string,
-    @Query('limit') limit?: number,
-  ) {
-    const messages = await this.conversationService.getConversationHistory(
-      sessionId,
-      limit || 50,
-    );
+  @Get(":sessionId/messages")
+  async getMessages(@Param("sessionId") sessionId: string, @Query("limit") limit?: number) {
+    const messages = await this.conversationService.getConversationHistory(sessionId, limit || 50)
 
     return {
       success: true,
@@ -43,18 +35,16 @@ export class ConversationController {
         audioUrl: msg.audioUrl,
         audioDurationSeconds: msg.audioDurationSeconds,
       })),
-    };
+    }
   }
 
-  @Get('moment/:momentId')
-  async getConversationsByMoment(@Param('momentId') momentId: number) {
-    const messages = await this.conversationService.getConversationsByMoment(
-      momentId,
-    );
+  @Get("moment/:momentId")
+  async getConversationsByMoment(@Param("momentId") momentId: number) {
+    const messages = await this.conversationService.getConversationsByMoment(momentId)
 
     return {
       success: true,
       data: messages,
-    };
+    }
   }
 }

@@ -63,11 +63,13 @@ curl http://localhost:8080/health
 ### REST API
 
 #### 健康检查
+
 ```
 GET /health
 ```
 
 #### 设备管理
+
 ```
 POST /api/devices/register    # 注册设备
 GET  /api/devices/:deviceId   # 获取设备信息
@@ -76,6 +78,7 @@ GET  /api/devices             # 获取所有设备
 ```
 
 #### 会话管理
+
 ```
 POST /api/conversations                    # 创建会话
 GET  /api/conversations/:sessionId/messages # 获取会话历史
@@ -85,30 +88,36 @@ GET  /api/conversations/moment/:momentId   # 获取时刻相关会话
 ### WebSocket 接口
 
 #### 设备连接
+
 ```
 ws://localhost:8080/device/ws
 ```
 
 消息类型：
+
 - `register` - 设备注册
 - `heartbeat` - 心跳
 
 #### 音频处理
+
 ```
 ws://localhost:8080/audio/ws
 ```
 
 消息类型：
+
 - `audio_start` - 开始音频会话
 - `audio_chunk` - 音频数据块
 - `audio_end` - 结束音频会话
 
 #### 监控
+
 ```
 ws://localhost:8080/monitor/ws
 ```
 
 消息类型：
+
 - `subscribe` - 订阅事件
 
 ## 项目结构
@@ -182,14 +191,14 @@ npm run test:cov
 
 ## 环境变量
 
-| 变量名 | 说明 | 默认值 |
-|--------|------|--------|
-| PORT | 服务端口 | 8080 |
-| NODE_ENV | 运行环境 | development |
-| DATABASE_PATH | 数据库路径 | data/kuakua-mirror.db |
-| OPENAI_API_KEY | OpenAI API Key | - |
-| OPENAI_MODEL | OpenAI 模型 | gpt-4 |
-| CORS_ORIGIN | CORS 允许源 | * |
+| 变量名         | 说明           | 默认值                |
+| -------------- | -------------- | --------------------- |
+| PORT           | 服务端口       | 8080                  |
+| NODE_ENV       | 运行环境       | development           |
+| DATABASE_PATH  | 数据库路径     | data/kuakua-mirror.db |
+| OPENAI_API_KEY | OpenAI API Key | -                     |
+| OPENAI_MODEL   | OpenAI 模型    | gpt-4                 |
+| CORS_ORIGIN    | CORS 允许源    | *                     |
 
 ## 部署
 
@@ -223,16 +232,20 @@ pm2 start dist/main.js --name kuakua-service
 ## 故障排查
 
 ### 数据库连接失败
+
 确保 `data` 目录存在且有写权限：
+
 ```bash
 mkdir -p data
 chmod 755 data
 ```
 
 ### WebSocket 连接失败
+
 检查防火墙设置，确保端口 8080 开放。
 
 ### OpenAI API 错误
+
 - 检查 API Key 是否正确
 - 确认账户有足够余额
 - 检查网络连接

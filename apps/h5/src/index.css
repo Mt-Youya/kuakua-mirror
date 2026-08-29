@@ -1,0 +1,536 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family:
+      "Plus Jakarta Sans",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "PingFang SC",
+      "Hiragino Sans GB",
+      "Microsoft YaHei",
+      sans-serif;
+  }
+
+  .font-serif-sc {
+    font-family: "Noto Serif SC", serif;
+  }
+}
+
+/* Atmospheric P2 Color Palette & Aura Gradients (Preserved background colors with enhanced luminous depth) */
+.bg-aura-gradient {
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(200, 184, 217, 0.5) 0%,
+    rgba(214, 237, 248, 0.6) 45%,
+    rgba(253, 248, 245, 0.92) 100%
+  );
+}
+
+.bg-hero-glow {
+  background: radial-gradient(130% 120% at 50% 5%, #d4ecf8 0%, #dfdaf3 30%, #fbf6f4 65%, #fff4f0 100%);
+}
+
+.bg-sunset-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 245, 242, 0.75) 50%,
+    rgba(240, 237, 248, 0.8) 100%
+  );
+}
+
+/* ==========================================================================
+   AUTHENTIC FROSTED GLASS SYSTEM (Apple Vision Pro / iOS Glass / Optical Lens)
+   ========================================================================== */
+
+/* 1. Main Frosted Glass Card (半透明雾面玻璃 · 真实玻璃厚度与微反光描边) */
+.glass-card,
+.glass-frost-card {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(255, 255, 255, 0.6) 48%,
+    rgba(255, 255, 255, 0.74) 100%
+  );
+  backdrop-filter: blur(28px) saturate(190%) contrast(101%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(101%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.96),
+    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.35),
+    0 10px 30px -4px rgba(145, 125, 175, 0.08),
+    0 2px 8px -1px rgba(0, 0, 0, 0.02);
+}
+
+/* Light specular sheen on upper glass surface */
+.glass-card::before,
+.glass-frost-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 55%;
+  background: radial-gradient(
+    ellipse at 30% 0%,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(255, 255, 255, 0.25) 45%,
+    rgba(255, 255, 255, 0) 80%
+  );
+  pointer-events: none;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+/* 2. Subtle Frosted Glass (Nested chips, pills, tags, search bars) */
+.glass-card-subtle,
+.glass-frost-subtle {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.54) 100%);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -0.5px 0.5px 0 rgba(255, 255, 255, 0.3),
+    0 2px 6px -1px rgba(140, 120, 160, 0.04);
+}
+
+/* Subtle Frosted Glass without border (今日夸夸记录卡片 · 无独立外边框) */
+.glass-card-subtle-flat {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.54) 100%);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow:
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -0.5px 0.5px 0 rgba(255, 255, 255, 0.3),
+    0 2px 6px -1px rgba(140, 120, 160, 0.04);
+}
+
+/* 3. Hero & Highlight Glass (高折射感与微晕彩) */
+.glass-card-strong,
+.glass-frost-hero {
+  position: relative;
+  background: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 248, 245, 0.66) 42%,
+    rgba(246, 242, 255, 0.78) 100%
+  );
+  backdrop-filter: blur(32px) saturate(200%) contrast(102%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%) contrast(102%);
+  border: 1px solid rgba(255, 255, 255, 0.94);
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.4),
+    0 12px 36px -6px rgba(160, 130, 190, 0.11),
+    0 2px 10px -1px rgba(0, 0, 0, 0.02);
+}
+
+.glass-card-strong::before,
+.glass-frost-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 65%;
+  background: radial-gradient(
+    ellipse at 25% 0%,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 246, 242, 0.35) 40%,
+    rgba(255, 255, 255, 0) 75%
+  );
+  pointer-events: none;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+/* 4. Frosted Modal & Dialog Sheets */
+.glass-modal,
+.glass-frost-modal {
+  position: relative;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.88) 100%
+  );
+  backdrop-filter: blur(36px) saturate(200%) contrast(102%);
+  -webkit-backdrop-filter: blur(36px) saturate(200%) contrast(102%);
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.35),
+    0 24px 60px -10px rgba(110, 90, 150, 0.2),
+    0 4px 16px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* 5. Interactive Card Hover Effect */
+.glass-card-hover {
+  transition:
+    transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.26s ease,
+    background 0.26s ease;
+}
+.glass-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.98);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 255, 255, 0.68) 48%,
+    rgba(255, 255, 255, 0.8) 100%
+  );
+  box-shadow:
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.45),
+    0 16px 40px -6px rgba(140, 115, 175, 0.14),
+    0 4px 12px -2px rgba(0, 0, 0, 0.03);
+}
+
+/* 6. Navigation and Header Frosted Glass */
+.glass-nav {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.72) 100%);
+  backdrop-filter: blur(28px) saturate(190%) contrast(101%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(101%);
+  border-top: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95),
+    0 -4px 20px -2px rgba(140, 120, 160, 0.06);
+}
+
+.glass-header {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.72) 100%);
+  backdrop-filter: blur(28px) saturate(190%) contrast(101%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(101%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 -1px 1.5px 0 rgba(255, 255, 255, 0.8),
+    0 4px 20px -2px rgba(140, 120, 160, 0.05);
+}
+
+/* Soft diffuse micro-shadows */
+.shadow-2xs {
+  box-shadow:
+    0 1px 2px 0 rgba(0, 0, 0, 0.03),
+    0 1px 1px -1px rgba(0, 0, 0, 0.02);
+}
+
+/* Subtle breathing & pulse animations */
+@keyframes soft-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 3s infinite ease-in-out;
+}
+
+/* Full-screen overlay slide-up from bottom (search layer) */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Cloud-shaped card (今日夸夸记录 · 云朵边框) */
+.cloud-card {
+  border-radius: 2.9rem 2.1rem 2.5rem 1.5rem / 2.1rem 2.9rem 1.7rem 2.7rem;
+}
+
+/* iPhone 底部安全区（底部横条）适配 */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* H5 App Frame：全屏场景共享同一视口、安全区与最大画布。 */
+.h5-fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: 28rem;
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding-top: var(--h5-frame-top);
+  padding-bottom: var(--h5-safe-bottom);
+}
+
+.companion-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgb(28 25 23 / 0.4);
+  backdrop-filter: blur(12px);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.companion-dialog-popup {
+  transition:
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.companion-dialog-backdrop[data-starting-style],
+.companion-dialog-backdrop[data-ending-style],
+.companion-dialog-popup[data-starting-style],
+.companion-dialog-popup[data-ending-style] {
+  opacity: 0;
+}
+
+.companion-dialog-popup[data-starting-style],
+.companion-dialog-popup[data-ending-style] {
+  transform: scale(0.96);
+}
+
+/* Sparkles：此刻页背景星星粒子 */
+.sparkle-star {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 168, 128, 0.75) 55%,
+    rgba(255, 122, 80, 0) 100%
+  );
+  box-shadow: 0 0 8px 2px rgba(255, 176, 138, 0.55);
+  animation: sparkle-twinkle ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sparkle-twinkle {
+  0%,
+  100% {
+    transform: scale(0.35);
+    opacity: 0.15;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* CharReveal：夸夸文案逐字浮现 */
+.char-in {
+  display: inline-block;
+  opacity: 0;
+  animation: char-in 0.5s ease forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes char-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Typewriter：打字机光标闪烁 */
+.type-cursor {
+  animation: type-blink 0.9s step-end infinite;
+  color: #ff7a50;
+}
+
+@keyframes type-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* GradientText：柔和渐变文字（橙 → 紫） */
+.text-gradient {
+  background: linear-gradient(120deg, #ff8a65 0%, #ff7a50 45%, #c8b8d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 卡片/弹窗渐出（关闭时） */
+@keyframes fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.animate-fade-out {
+  animation: fade-out 0.25s ease forwards;
+}
+
+/* 云朵弹幕：内容自动向左飘动（内容双份 + translateX(-50%) 无缝循环） */
+@keyframes cloud-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.cloud-marquee {
+  width: max-content;
+  animation: cloud-marquee 45s linear infinite;
+}
+
+.cloud-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(200, 184, 217, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 184, 217, 0.7);
+}
+
+/* ═══ 🌙 月亮另一面：3D 翻转卡 ═══ */
+/* 卡片翻转容器：建立透视，让翻面有纵深感 */
+.moon-flip-container {
+  perspective: 1200px;
+}
+
+/* 翻转内层：保留 3D 上下文，翻转时整体 rotateY */
+/* will-change 提升为独立合成层，翻转全程 GPU 加速不重绘 */
+.moon-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.2, 0.85, 0.3, 1.1);
+  will-change: transform;
+}
+
+.moon-flip-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+/* 正反面共用：背面隐藏，避免透视穿帮；translateZ(0) 促进合成层，防 90° 处闪烁 */
+.moon-flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  border-radius: 24px;
+  transform: translateZ(0);
+}
+
+/* 背面初始即旋转 180°，配合内层当前角度实现翻面 */
+.moon-flip-back {
+  transform: translateZ(0) rotateY(180deg);
+}
+
+/* 暗月正面：深色噪点底（多层径向渐变在深蓝黑上制造月面颗粒感） */
+.moon-face-dark {
+  background:
+    radial-gradient(circle at 78% 12%, rgba(200, 184, 217, 0.22) 0%, transparent 42%),
+    radial-gradient(circle at 18% 88%, rgba(255, 122, 80, 0.14) 0%, transparent 46%),
+    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1.5px),
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1.5px),
+    linear-gradient(160deg, #101527 0%, #0b0f1e 55%, #141b33 100%);
+  background-size:
+    auto,
+    auto,
+    26px 26px,
+    13px 13px,
+    auto;
+}
+
+/* 亮月背面：珠光暖白 + 高光扫过 */
+.moon-face-bright {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.9) 0%, transparent 45%),
+    radial-gradient(circle at 82% 85%, rgba(255, 240, 224, 0.7) 0%, transparent 50%),
+    radial-gradient(circle at 55% 30%, rgba(255, 122, 80, 0.07) 0%, transparent 55%),
+    linear-gradient(150deg, #fffdf8 0%, #f9f3ea 50%, #fdf6fd 100%);
+}
+
+/* 亮月高光扫过：默认隐藏；翻面完成（.is-flipped）后从左往右扫一道柔光 */
+@keyframes moon-sheen {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(160%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+.moon-sheen {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  width: 34%;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.is-flipped .moon-sheen {
+  animation: moon-sheen 0.9s ease 0.55s 1 forwards;
+}
+
+/* 收尾屏的空灵渐入 */
+@keyframes moon-breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+.moon-breathe {
+  animation: moon-breathe 3s ease-in-out infinite;
+}
