@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import { Analytics } from "@vercel/analytics/react"
 import { UserProfile, Moment, Praise, Theme, DiscoveredTrait } from "./types"
 import {
   INITIAL_USER,
@@ -409,6 +410,8 @@ export default function App() {
           onToggleLikeMoment={handleToggleLikeMoment}
         />
       )}
+
+      <Analytics />
     </H5AppFrame>
   )
 }
